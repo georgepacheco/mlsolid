@@ -1,0 +1,45 @@
+{
+  "name": "mlsolid",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "ts-node-dev --respawn --transpile-only ./src/index.ts",
+    "build": "tsc && cp -R src/server/resources/rml/*.ttl dist/"
+  },
+  "keywords": [],
+  "author": "George Pacheco",
+  "license": "ISC",
+  "dependencies": {
+    "@comunica/query-sparql": "^3.3.0",
+    "@comunica/query-sparql-solid": "^3.0.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "http-status-codes": "^2.3.0",
+    "rdflib": "^2.2.34",
+    "rocketrml": "^2.1.2",
+    "solid-auth-cli": "^1.0.15",
+    "solid-node-client": "^2.1.20",
+    "uuid": "^9.0.1",
+    "yup": "^1.4.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.0.2",
+    "@eslint/js": "^9.0.0",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.13",
+    "@types/http-status-codes": "^1.2.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "eslint": "^8.57.0",
+    "eslint-config-standard-with-typescript": "^43.0.1",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-n": "^16.6.2",
+    "eslint-plugin-promise": "^6.1.1",
+    "globals": "^15.0.0",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^7.6.0"
+  },
+  "description": ""
+}
