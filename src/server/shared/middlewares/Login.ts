@@ -7,6 +7,7 @@ import { buildAuthenticatedFetch } from '@inrupt/solid-client-authn-core';
 import { Request, Response } from "express";
 import * as yup from 'yup';
 import { validation } from "./Validation";
+import { Environment } from "./Environment";
 
 type Token = {
     id: string,
@@ -14,52 +15,59 @@ type Token = {
     resource: string
 }
 
-const bodyValidation: yup.ObjectSchema<IUser> = yup.object().shape({
-    userid: yup.string().required(),
-    local_webid: yup.string().required(),
-    webid: yup.string().required(),
-    idp: yup.string().required(),
-    username: yup.string().required(),
-    password: yup.string().required(),
-    podname: yup.string().required()
-})
+// const bodyValidation: yup.ObjectSchema<IUser> = yup.object().shape({
+//     userid: yup.string().required(),
+//     local_webid: yup.string().required(),
+//     webid: yup.string().required(),
+//     idp: yup.string().required(),
+//     username: yup.string().required(),
+//     password: yup.string().required(),
+//     podname: yup.string().required()
+// })
 
-export const loginBodyValidation = validation('body', bodyValidation);
+// export const loginBodyValidation = validation('body', bodyValidation);
 
 
-export const login = async (req: Request<{}, {}, IUser> | IUser, res: Response) => {
+export const login = async () => {
     // console.log(req.body);
 
-    const user: IUser = 'body' in req ? req.body : req;
-    
-    const authFetch = await getAuthorization(user);
-    
+    // const user: IUser = 'body' in req ? req.body : req;
+
+    let sim_user = await load_sim_credentials();
+      
+    const authFetch = await getAuthorization(sim_user);
+
     return authFetch;
 }
 
-// export const loginExternal = async (req: Request<{}, {}, IUser> | IUser, res: Response) => {
-//     // console.log(req.body);
+const load_sim_credentials = async () => {
 
-//     const user: IUser = 'body' in req ? req.body : req;
+    let sim_user: IUser = {
+        userid: '',
+        local_webid: Environment.WEBID,
+        webid: Environment.WEBID,
+        username: Environment.LOGIN,    
+        password: Environment.PASSWORD,
+        idp: Environment.IDP,
+        podname: Environment.PODNAME,
 
-//     console.log(user);
-//     const token = await getAuthorization(user);
+    }
 
-//     // const accessToken = await getAccessToken(token, user);
-
-//     return res.send( await getAccessToken(token, user));
-
-// }
+    return sim_user;
+}
 
 export async function getAuthorization(user: IUser) {
 
     // All these examples assume the server is running at `http://localhost:3000/`
 
     // First we request the account API controls to find out where we can log in
+    
+    console.log(user.idp + '.account/');
 
-    const indexResponse = await fetch(user.idp + '.account/');
+    const indexResponse = await fetch('https://192.168.0.111:3000/.account/');
+    
     const { controls } = await indexResponse.json();
-
+    
     // And then we log in to the account API
     const response = await fetch(controls.password.login, {
         method: 'POST',
@@ -70,7 +78,7 @@ export async function getAuthorization(user: IUser) {
     const { authorization } = await response.json();
 
     let token = await generateToken(authorization, user);
-    
+
     return getAuthFetch(token, user);
 }
 
@@ -113,7 +121,7 @@ async function getAuthFetch(token: Token, user: IUser) {
     // A key pair is needed for encryption.
     // This function from `solid-client-authn` generates such a pair for you.
     const dpopKey = await generateDpopKeyPair();
-    
+
     // These are the ID and secret generated in the previous step.
     // Both the ID and the secret need to be form-encoded.
     const authString = `${encodeURIComponent(token.id)}:${encodeURIComponent(token.secret)}`;
@@ -121,7 +129,7 @@ async function getAuthFetch(token: Token, user: IUser) {
     // http://localhost:3000/.well-known/openid-configuration
     // if your server is hosted at http://localhost:3000/.
     const tokenUrl = user.idp + '.oidc/token';
-    
+
     const response = await fetch(tokenUrl, {
         method: 'POST',
         headers: {
@@ -137,7 +145,7 @@ async function getAuthFetch(token: Token, user: IUser) {
     // The JSON also contains an "expires_in" field in seconds,
     // which you can use to know when you need request a new Access token.
     const { access_token: accessToken } = await response.json();
-    
+
     const authFetch = await buildAuthenticatedFetch(accessToken, { dpopKey });
 
     return authFetch;

@@ -1,13 +1,15 @@
 import { Router } from "express";
 import { StatusCodes } from 'http-status-codes';
-import { login, loginBodyValidation} from "../shared/middlewares";
+import { login } from "../shared/middlewares";
 import { SolidController } from "../controllers";
 
 const router = Router();
 
 router.get('/', (req, res) => {
-    return res.send('Hello API Node for Community Solid Server!');
+    return res.send('Hello API Machine Learning for CSS!');
 });
+
+// router.get('/sensor/:type/observations', SolidController.getObservationsBySensorType);
 
 // router.get('/getFot', (req, res) => {
 //     return res.send('Get Fot Test');

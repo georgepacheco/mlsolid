@@ -4,16 +4,13 @@ import {router} from './routes';
 import 'dotenv/config';
 import https from 'https';
 import fs from 'fs';
+import path from 'path';
 
 // Caminho para o certificado e chave privada no docker
 // const privateKey = fs.readFileSync('../solid/server.key', 'utf8');
 // const certificate = fs.readFileSync('../solid/server.cert', 'utf8');
 // const credentials = { key: privateKey, cert: certificate };
 
-// Caminho para o certificado e chave privada LOCAL
-const privateKey = fs.readFileSync('../mlsolid/certificates/server.key', 'utf8');
-const certificate = fs.readFileSync('../mlsolid/certificates/server.cert', 'utf8');
-const credentials = { key: privateKey, cert: certificate };
 
 const server = express();
 
@@ -22,7 +19,7 @@ const server = express();
 //     origin: process.env.ENABLED_CORS?.split(';') || []
 // }));
 
-const basePath = '/apiCloud';
+const basePath = '/apimlsolid';
 
 server.use(cors());
 
@@ -31,9 +28,8 @@ server.use(basePath, express.json());
 server.use(basePath, router);
 
 // Criação do servidor HTTPS
-const httpsServer = https.createServer(credentials, server);
+// const httpsServer = https.createServer(credentials, server);
 
+// export { httpsServer };
 
-export { httpsServer };
-
-// export { server };
+export { server };

@@ -5,7 +5,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node-dev --respawn --transpile-only ./src/index.ts",
-    "build": "tsc && cp -R src/server/resources/rml/*.ttl dist/"
+    "teste": "ts-node-dev --respawn --transpile-only ./src/teste.ts",
+    "build": "tsc && cp -R src/server/resources/rml/*.ttl dist/",
+    "start": "node dist/index.js"
   },
   "keywords": [],
   "author": "George Pacheco",
