@@ -1,9 +1,10 @@
 import { SolidController } from "./server/controllers";
-import { IUser } from "./server/database/models";
+import { generateFile } from "./server/controllers/file/GenerateFile";
+import { ISensor, IUser } from "./server/database/models";
 import { login } from "./server/shared/middlewares";
 
 
-const doService =  async () => {
+const doService = async () => {
 
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
@@ -20,12 +21,14 @@ const doService =  async () => {
 
     const sensorType = 'AirThermometer';
 
-    const result = await SolidController.getObservationsBySensorType(user, sensorType);
-    // console.log(result);
+    console.log('teste');
 
-    // const authFetch = await login();
+    // const result = await SolidController.getObservationsBySensorType(user.webid, sensorType);
 
-    // console.log(authFetch);
+    const result = await generateFile(user.webid, sensorType);
+
+    console.log('FIM')
+
 }
 
 doService();

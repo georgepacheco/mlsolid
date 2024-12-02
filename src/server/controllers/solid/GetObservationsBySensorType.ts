@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { IObservation, IUser } from "../../database/models";
+import { IObservation, ISensor, IUser } from "../../database/models";
 import { login, validation } from "../../shared/middlewares";
 // import fetch from 'node-fetch';
 import { fetch as fetch2 } from "cross-fetch";
@@ -14,14 +14,20 @@ interface IParamProps {
     type?: string;
 }
 
-export const getObservationsBySensorType = async (user: IUser, sensorType: string) => {
+/**
+ * 
+ * @param webId of the user's repository from which the data will be obtained. 
+ * @param sensorType 
+ * @returns all sensors of the type 'sensorType' and their observations
+ */
+export const getObservationsBySensorType = async (webId: string, sensorType: string) => {
     // export const getObservationsBySensorType = async (req: Request<IParamProps, {}, IUser>, res: Response) => {
 
     const authFetch = await login();
 
 
     // const sourcePath = req.body.idp + req.body.podname + "/private/store.ttl";
-    const sourcePath = getSourcePath(user.webid) + `/private/sensors/${sensorType}.ttl`;
+    const sourcePath = getSourcePath(webId) + `/private/sensors/${sensorType}.ttl`;
 
     const myEngine = new QueryEngine();
 
@@ -34,10 +40,10 @@ export const getObservationsBySensorType = async (user: IUser, sensorType: strin
             //destination: { type: 'patchSparqlUpdate', value: sourcePath }
         });
 
-    const observations = await prepareDataObservations(bindingsStream);
+    const sensors = await prepareDataObservations(bindingsStream, sensorType);
 
 
-    return observations;
+    return sensors;
 };
 
 
@@ -71,26 +77,47 @@ const getSourcePath = (webid: string) => {
     return baseUrl;
 }
 
-const prepareDataObservations = async (bindingsStream: BindingsStream) => {
+const prepareDataObservations = async (bindingsStream: BindingsStream, sensorType: string) => {
 
-
-    let observations: IObservation[] = [];
-
+    let sensors: ISensor[] = [];
+    
     for await (const binding of bindingsStream) {
-        console.log(binding.toString());
+        
+        let sensor: ISensor = {
+            sensor: '',
+            lat: '',
+            long: '',
+            parentClass: '',
+            quantityKind: '',
+            sensorType: sensorType,
+            unitType:'',         
+            observation: []   
+        }
+
+        sensor.sensor = binding.get('sensor')?.value;
+
+        // let observations: IObservation[] = [];
         let obs: IObservation = {
             observationId: '',
             resultValue: '',
             resultTime: ''
-        };
+        };        
 
         obs.observationId = binding.get('observation')?.value;
         obs.resultValue = binding.get('resultvalue')?.value;
-        obs.resultTime = binding.get('resulttime')?.value;
-        observations.push(obs);
+        obs.resultTime = binding.get('resulttime')?.value;        
+        
+        const existingSensor = sensors.find(existing => existing.sensor === sensor.sensor);
+        
+        if (!existingSensor) {
+            sensor.observation?.push(obs);
+            sensors.push(sensor);
+        } else {
+            existingSensor.observation?.push(obs);
+        }    
     }
 
-    return observations;
+    return sensors;
 }
 
 // async function queryObservationBySensor(sensor: string | undefined) {

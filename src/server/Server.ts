@@ -11,7 +11,7 @@ import path from 'path';
 // const certificate = fs.readFileSync('../solid/server.cert', 'utf8');
 // const credentials = { key: privateKey, cert: certificate };
 
-
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 const server = express();
 
 // server.use(cors({
