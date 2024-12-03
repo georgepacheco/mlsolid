@@ -1,7 +1,6 @@
 import { SolidController } from "./server/controllers";
 import { generateFile } from "./server/controllers/file/GenerateFile";
 import { ISensor, IUser } from "./server/database/models";
-import { login } from "./server/shared/middlewares";
 
 
 const doService = async () => {

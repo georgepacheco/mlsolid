@@ -1,13 +1,12 @@
 import { Request, Response } from "express";
 import { IObservation, ISensor, IUser } from "../../database/models";
-import { login, validation } from "../../shared/middlewares";
-// import fetch from 'node-fetch';
 import { fetch as fetch2 } from "cross-fetch";
 import { StatusCodes } from "http-status-codes";
 import * as yup from 'yup';
 import { Bindings } from "rdflib/lib/types";
 import { BindingsStream } from '@comunica/types';
 import { QueryEngine } from "@comunica/query-sparql-solid";
+import { login } from "../../shared/middlewares/Login";
 
 
 interface IParamProps {

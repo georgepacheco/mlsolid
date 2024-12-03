@@ -2,15 +2,8 @@ import { getObservationsBySensorType } from "../solid/GetObservationsBySensorTyp
 
 const fs = require('fs');
 
-// Lê o caminho do arquivo de saída como argumento
-const outputPath = 'SensorData.json';
 
 export const generateFile = async (webId: string, sensorType: string) => {
-
-    if (!outputPath) {
-        console.error("Erro: Caminho do arquivo de saída não fornecido.");
-        process.exit(1);
-    }
 
     const data = await fetchDataFromRepository(webId,sensorType);
     
@@ -26,3 +19,19 @@ const fetchDataFromRepository = async (webId: string, sensorType: string) => {
     console.log(result);
     return result;
 }
+
+
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
+const outputPath = process.argv[2];
+const webid = process.argv[3];
+const sensorType = process.argv[4];
+
+// const outputPath = 'SensorData.json';
+
+if (!outputPath) {
+    console.error("Erro: Caminho do arquivo de saída não fornecido.");
+    process.exit(1);
+} 
+
+generateFile (webid, sensorType)

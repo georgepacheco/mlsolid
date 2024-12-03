@@ -5,8 +5,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node-dev --respawn --transpile-only ./src/index.ts",
-    "teste": "ts-node-dev --respawn --transpile-only ./src/teste.ts",
-    "build": "tsc && cp -R src/server/resources/rml/*.ttl dist/",
+    "teste": "ts-node-dev --respawn --transpile-only ./src/teste.ts",    
+    "build": "tsc",
     "start": "node dist/index.js"
   },
   "keywords": [],
@@ -17,7 +17,6 @@
     "@comunica/query-sparql-solid": "^3.0.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^4.21.1",
     "http-status-codes": "^2.3.0",
     "rdflib": "^2.2.34",
     "rocketrml": "^2.1.2",
