@@ -22,7 +22,7 @@ def process_data (webid, sensorType):
                 
         try:
             # Executa o script Node.js para gerar os dados
-            subprocess.run(["node", "../dist/server/controllers/file/GenerateFile.js", temp_file_path, webid, sensorType], check=True)
+            subprocess.run(["node", "../dist/controllers/file/GenerateFile.js", temp_file_path, webid, sensorType], check=True)
 
             # Consome os dados gerados pelo Node.js
             prepare_data(temp_file_path)
