@@ -1,19 +1,31 @@
 import json
 import tempfile
 import subprocess
+import pandas as pd
 
 def prepare_data(file_path):
     # Lê os dados do arquivo
     with open(file_path, 'r') as file:
         data = json.load(file)
-        print("Dados consumidos do arquivo:", data)
 
-        # Prepara os dados para serem usados pelos algoritmos
-        # Criar uma tabela?    
+        # Prepara os dados para serem usados pelos algoritmos        
+        # sc01_date - sc01_value
+        # Lista para armazenar os dados extraídos
+        table_data = []
         
         # # Processa os dados
-        # for item in data['data']:
-        #     print(f"Processando ID: {item['id']}, Valor: {item['value']}")
+        for sensor_data in data:
+            sensor_name = sensor_data['sensor']            
+            if 'observation' in sensor_data:
+                for observation in sensor_data['observation']:
+                    result_value = observation.get('resultValue', 'N/A')
+                    result_time = observation.get('resultTime', 'N/A')
+                    # Adiciona os dados à lista
+                    table_data.append({'{sensor_name}_date': result_time, '{sensor_name}_value': result_value})
+         
+        # Criação da tabela com pandas
+        df = pd.DataFrame(table_data)
+        print(df)
 
 def process_data (webid, sensorType): 
     # Arquivo temporário para comunicação
