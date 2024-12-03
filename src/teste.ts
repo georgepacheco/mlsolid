@@ -18,7 +18,7 @@ const doService = async () => {
 
     }
 
-    const sensorType = 'AirThermometer';
+    const sensorType = ["AirThermometer"];
 
     console.log('teste');
 

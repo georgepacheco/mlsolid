@@ -3,9 +3,9 @@ import { getObservationsBySensorType } from "../solid/GetObservationsBySensorTyp
 const fs = require('fs');
 
 
-export const generateFile = async (webId: string, sensorType: string) => {
+export const generateFile = async (webId: string, sensorType: string[]) => {
 
-    const data = await fetchDataFromRepository(webId,sensorType);
+    const data = await fetchDataFromRepository(webId,sensorType[0]);
     
 
     // Escreve os dados no arquivo JSON
@@ -25,7 +25,9 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 const outputPath = process.argv[2];
 const webid = process.argv[3];
-const sensorType = process.argv[4];
+const sensorType = process.argv[4].split(',');
+
+// console.log("Sensor Types: " + sensorType[0]);
 
 // const outputPath = 'SensorData.json';
 
@@ -34,4 +36,4 @@ if (!outputPath) {
     process.exit(1);
 } 
 
-generateFile (webid, sensorType)
+generateFile (webid, sensorType);

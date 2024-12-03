@@ -21,8 +21,11 @@ def process_data (webid, sensorType):
         temp_file_path = temp_file.name
                 
         try:
+            # Converte a lista de sensores em uma string separada por vírgulas
+            sensor_types_str = ",".join(sensorType)
+                       
             # Executa o script Node.js para gerar os dados
-            subprocess.run(["node", "../dist/controllers/file/GenerateFile.js", temp_file_path, webid, sensorType], check=True)
+            subprocess.run(["node", "../dist/controllers/file/GenerateFile.js", temp_file_path, webid, sensor_types_str], check=True)
 
             # Consome os dados gerados pelo Node.js
             prepare_data(temp_file_path)
