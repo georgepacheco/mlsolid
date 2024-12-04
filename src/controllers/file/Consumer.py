@@ -19,9 +19,9 @@ def prepare_data(file_path):
             if 'observation' in sensor_data:
                 for observation in sensor_data['observation']:
                     result_value = observation.get('resultValue', 'N/A')
-                    result_time = observation.get('resultTime', 'N/A')
+                    # result_time = observation.get('resultTime', 'N/A')
                     # Adiciona os dados à lista
-                    table_data.append({'{sensor_name}_date': result_time, '{sensor_name}_value': result_value})
+                    table_data.append({'{sensor_name}_value': result_value})
          
         # Criação da tabela com pandas
         df = pd.DataFrame(table_data)
