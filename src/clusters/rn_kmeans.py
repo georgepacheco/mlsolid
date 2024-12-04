@@ -9,29 +9,28 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import silhouette_score
 from sklearn.metrics import davies_bouldin_score
 from sklearn.metrics import calinski_harabasz_score
+import random
 
-
-# # Carregar os dados de exemplo
-# df = pd.read_csv("../heart.csv")
-# df2=df.drop(columns=['DEATH_EVENT'])
-# X = pd.get_dummies(df);
-# scaled_X = StandardScaler().fit_transform(X)  # Normalização dos dados
+# SEED = 42
+# tf.random.set_seed(SEED)
+# np.random.seed(SEED)
+# random.seed(SEED)
 
 # Lista com os nomes das colunas
 collumns = ['date', 'time', 'epoch', 'moteid', 'temperature', 'humidity', 'light', 'voltage']
 
 # Carregar dados
-df = pd.read_csv("../data.txt", sep=" ", engine='python', names=collumns)
-df_1000 = df.iloc[:100000]
+df = pd.read_csv("../../data.txt", sep=" ", engine='python', names=collumns)
+df_1000 = df.iloc[:10000].copy()
 
 # Limpeza básica - substituindo "?" por NaN e removendo linhas faltantes
 df_1000.replace("?", np.nan, inplace=True)
-df_1000.dropna(inplace=True)
+df_1000 = df_1000.dropna()
 
-# Remove Coluna Target
+# Remove Colunas
 df2 = df_1000.drop(columns=['date','time', 'epoch', 'moteid',])
 
-# Transformar variáveis categóricas em colunas numéricas binárias
+# Transformar variáveis categóricas em numéricas binárias
 X = pd.get_dummies(df2)
 
 # Certificar-se de que todos os dados estão em formato numérico
@@ -44,19 +43,25 @@ if X.isnull().values.any():
 
 # Normalizar os dados
 scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
+X_scaled = scaler.fit_transform(X) # veriicar como funciona a normalização
 
 # Definir um modelo simples de `tf.keras`
 model = tf.keras.models.Sequential([
-    layers.Dense(32, activation='relu', input_shape=(4,)),
+    layers.Dense(32, activation='relu', input_shape=(4,)), 
     layers.Dense(16, activation='relu'),
-    layers.Dense(8, activation='relu')  # Exemplo de 10 classes, ajuste conforme necessário
+    # A quantidade de unidades na última camada deve refletir o número de características 
+    # latentes que você deseja usar para representar os dados, e não o número de clusters.
+    # Fornece uma representação das features, e não a probabilidade de classes.
+    layers.Dense(8, activation=None)  
 ])
 
 # Extrair features usando o modelo
 feature_extractor = tf.keras.Model(inputs=model.input, outputs=model.layers[-2].output)
-features = feature_extractor.predict(X_scaled)  # Obter as features
 
+# Obter as features
+features = feature_extractor.predict(X_scaled)  
+
+# Calcular o número de clusters
 # inertias = []
 # range_clusters = range(2, 11)
 
@@ -84,6 +89,8 @@ kmeans.fit(features)
     
 # Verificar as labels geradas pelo K-Means
 print("Labels de K-Means:", kmeans.labels_)
+
+print ("KMeans Inertia: ", kmeans.inertia_)
 
 silhouette_avg = silhouette_score(features, kmeans.labels_)
 print("Índice de Silhueta:", silhouette_avg)

@@ -16,12 +16,12 @@ from sklearn.metrics import calinski_harabasz_score
 collumns = ['date', 'time', 'epoch', 'moteid', 'temperature', 'humidity', 'light', 'voltage']
 
 # Carregar dados
-df = pd.read_csv("../data.txt", sep=" ", engine='python', names=collumns)
-df_1000 = df.iloc[:500]
+df = pd.read_csv("../../data.txt", sep=" ", engine='python', names=collumns)
+df_1000 = df.iloc[:100000].copy()
 
 # Limpeza básica - substituindo "?" por NaN e removendo linhas faltantes
 df_1000.replace("?", np.nan, inplace=True)
-df_1000.dropna(inplace=True)
+df_1000 = df_1000.dropna()
 
 # Remove Coluna Target
 df2 = df_1000.drop(columns=['date','time', 'epoch', 'moteid',])
@@ -40,6 +40,8 @@ if X.isnull().values.any():
 # Normalizar os dados
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
+
+# GAP Statistic - verificar o funcionamento e comparar com método do cotovelo
 
 # inertias = []
 # range_clusters = range(2, 11)
@@ -64,8 +66,9 @@ X_scaled = scaler.fit_transform(X)
 
 # pca = PCA(n_components=2)
 # X_pca = pca.fit_transform(X_scaled)
+# print ("PCA: ", X_pca)
 
-kmeans = KMeans(n_init='auto', n_clusters=4, random_state=42)
+kmeans = KMeans(n_init='auto', n_clusters=5, random_state=42)
 kmeans.fit(X_scaled)
 
 # Verificar as labels geradas pelo K-Means
