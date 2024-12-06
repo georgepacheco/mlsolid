@@ -62,7 +62,7 @@ export async function getAuthorization(user: IUser) {
 
     // First we request the account API controls to find out where we can log in
     
-    console.log(user.idp + '.account/');
+    // console.log(user.idp + '.account/');
 
     const indexResponse = await fetch('https://192.168.0.111:3000/.account/');
     

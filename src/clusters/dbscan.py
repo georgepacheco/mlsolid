@@ -7,12 +7,12 @@ from sklearn.cluster import DBSCAN
 collumns = ['date', 'time', 'epoch', 'moteid', 'temperature', 'humidity', 'light', 'voltage']
 
 # Carregar dados
-df = pd.read_csv("../data.txt", sep=" ", engine='python', names=collumns)
-df_1000 = df.iloc[:10000]
+df = pd.read_csv("../../data.txt", sep=" ", engine='python', names=collumns)
+df_1000 = df.iloc[:50000].copy()
 
 # Limpeza básica - substituindo "?" por NaN e removendo linhas faltantes
 df_1000.replace("?", np.nan, inplace=True)
-df_1000.dropna(inplace=True)
+df_1000 = df_1000.dropna()
 
 # Remove Coluna Target
 df2 = df_1000.drop(columns=['date','time', 'epoch', 'moteid',])

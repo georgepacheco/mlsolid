@@ -2,30 +2,47 @@ import json
 import tempfile
 import subprocess
 import pandas as pd
+from clusters import kmeans
 
 def prepare_data(file_path):
     # Lê os dados do arquivo
     with open(file_path, 'r') as file:
         data = json.load(file)
 
-        # Prepara os dados para serem usados pelos algoritmos        
-        # sc01_date - sc01_value
-        # Lista para armazenar os dados extraídos
-        table_data = []
-        
-        # # Processa os dados
+        # Dicionário para armazenar os dados por tipo de sensor
+        sensor_columns = {}
+
+        # Processa os dados
         for sensor_data in data:
-            sensor_name = sensor_data['sensor']            
+            sensor_type = sensor_data['sensorType']  
             if 'observation' in sensor_data:
+                # Garante que a chave para esse tipo de sensor exista no dicionário
+                if sensor_type not in sensor_columns:
+                    sensor_columns[sensor_type] = []
+                    
+                # Adiciona os valores das observações
                 for observation in sensor_data['observation']:
-                    result_value = observation.get('resultValue', 'N/A')
-                    # result_time = observation.get('resultTime', 'N/A')
-                    # Adiciona os dados à lista
-                    table_data.append({'{sensor_name}_value': result_value})
-         
-        # Criação da tabela com pandas
-        df = pd.DataFrame(table_data)
-        print(df)
+                    result_value = observation.get('resultValue', pd.NA)
+                    sensor_columns[sensor_type].append(result_value)
+
+        # Ajusta o tamanho das colunas para garantir alinhamento
+        max_length = max(len(values) for values in sensor_columns.values())
+        for sensor_type, values in sensor_columns.items():
+            # Preenche com 'N/A' se houver colunas de tamanhos diferentes
+            sensor_columns[sensor_type].extend([pd.NA] * (max_length - len(values)))
+
+        # Criação do DataFrame com pandas
+        df = pd.DataFrame(sensor_columns)
+
+        # print(df)
+        
+        # Chamar os algoritmo de agrupamento
+        # run_kmeans(df)
+        kmeans.elbow(df)
+        
+        # Enviar para o solid o resultado do agrupamento
+        
+        
 
 def process_data (webid, sensorType): 
     # Arquivo temporário para comunicação
