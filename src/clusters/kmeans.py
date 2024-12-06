@@ -33,10 +33,8 @@ def preprocess(df):
     return X_scaled
 
 
-def elbow(df):
-    
-    X_scaled = preprocess(df)
-    
+def elbow(X_scaled):
+       
     inertias = []
     wcss = []
     range_clusters = range(2, 11)
@@ -67,13 +65,13 @@ def elbow(df):
     # plt.savefig('bar_inertias.png')
 
 
-def run_kmeans(X_scaled):
+def run_kmeans(X_scaled, k):
             
     # n_clusters=5: Define o número de clusters que o algoritmo tentará encontrar.
     # random_state=42: Garante reprodutibilidade ao inicializar os centroids com a mesma semente pseudoaleatória.
     # n_init='auto': No Scikit-learn 1.4 ou mais recente, o valor 'auto' define o número de inicializações 
     # automaticamente (geralmente otimizado para um número adequado). Antes dessa versão, o padrão era 10 inicializações.    
-    kmeans = KMeans(n_init='auto', n_clusters=5, random_state=42)
+    kmeans = KMeans(n_init='auto', n_clusters=k, random_state=42)
     kmeans.fit(X_scaled)
 
     # Verificar as labels geradas pelo K-Means
@@ -88,6 +86,7 @@ def run_kmeans(X_scaled):
     calinski_harabasz = calinski_harabasz_score(X_scaled, kmeans.labels_)
     print("Coeficiente de Calinski-Harabasz:", calinski_harabasz)
 
+    # pca(X_scaled, kmeans)
 
 def pca(X_scaled, kmeans):
         # Reduzir os dados para 2D com PCA

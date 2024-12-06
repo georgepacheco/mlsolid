@@ -5,7 +5,7 @@ from clusters import kmeans
 if __name__ == "__main__":
     # print("Iniciando execução do main.py...")
     # webid = "https://192.168.0.111:3000/Joao/profile/card#me"
-    # sensorType = ["AirThermometer", "ECG", "BodyThermometer", "Glucometer", "HumiditySensor"]
+    # sensorType = ["AirThermometer", "HumiditySensor"]
     
     # process_data(webid, sensorType)  # Chama a função definida no consumer.py
     
@@ -21,6 +21,6 @@ if __name__ == "__main__":
     # Remove Collumns
     df2 = df_1000.drop(columns=['date','time', 'epoch', 'moteid',])
     
-    X_scaled = kmeans.preprocess(df)
+    X_scaled = kmeans.preprocess(df2)
     optimal_k = kmeans.elbow(X_scaled)
-    print (optimal_k)
+    kmeans.run_kmeans(X_scaled, optimal_k)
