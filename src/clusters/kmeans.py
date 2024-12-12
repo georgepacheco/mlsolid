@@ -14,10 +14,10 @@ def preprocess(df):
     
     # Substituir valores ausentes (pd.NA) pela média da respectiva coluna
     df = df.fillna(df.mean())
-
+    
     # Transformar variáveis categóricas em colunas numéricas binárias
     X = pd.get_dummies(df)
-
+    
     # Certificar-se de que todos os dados estão em formato numérico
     X = X.apply(pd.to_numeric)  
 
@@ -37,14 +37,14 @@ def elbow(X_scaled):
        
     inertias = []
     wcss = []
-    range_clusters = range(2, 11)
+    range_clusters = range(1, 11)
 
     for k in range_clusters:
         kmeans = KMeans(n_init='auto', n_clusters=k, random_state=42)
         kmeans.fit(X_scaled)
         inertias.append(kmeans.inertia_)
         wcss.append(kmeans.inertia_)
-        
+           
     # Usar o kneed para encontrar o cotovelo
     knee_locator = KneeLocator(range_clusters, wcss, curve="convex", direction="decreasing")
     optimal_k = knee_locator.knee
@@ -75,17 +75,22 @@ def run_kmeans(X_scaled, k):
     kmeans.fit(X_scaled)
 
     # Verificar as labels geradas pelo K-Means
-    print("Labels de K-Means:", kmeans.labels_)
+    # print("Labels de K-Means:", kmeans.labels_)
 
-    silhouette_avg = silhouette_score(X_scaled, kmeans.labels_)
-    print("Índice de Silhueta:", silhouette_avg)
+    silhouette = silhouette_score(X_scaled, kmeans.labels_)
+    # print("Índice de Silhueta:", silhouette_avg)
 
     davies_bouldin = davies_bouldin_score(X_scaled, kmeans.labels_)
-    print("Índice de Davies-Bouldin:", davies_bouldin)
+    # print("Índice de Davies-Bouldin:", davies_bouldin)
 
     calinski_harabasz = calinski_harabasz_score(X_scaled, kmeans.labels_)
-    print("Coeficiente de Calinski-Harabasz:", calinski_harabasz)
+    # print("Coeficiente de Calinski-Harabasz:", calinski_harabasz)
 
+    params = (kmeans.labels_)
+    results = (silhouette, davies_bouldin, calinski_harabasz)
+    
+    return (results, params)
+    
     # pca(X_scaled, kmeans)
 
 def pca(X_scaled, kmeans):
