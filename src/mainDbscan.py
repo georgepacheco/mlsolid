@@ -49,7 +49,7 @@ eps_values = np.linspace(0.5, 5, 10)
 min_samples_values = range(3, 10)
 
 best_params, best_results = dbscan.find_best_params(X_scaled, eps_values, min_samples_values)
-
+    
 # best_params, best_results =   dbscan.find_auto_params(X_scaled, eps_values, min_samples_values)
 
 print("Melhores parâmetros (eps, samples, clusters, outliers):", best_params)

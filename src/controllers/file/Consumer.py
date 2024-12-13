@@ -36,8 +36,7 @@ def prepare_data(file_path):
 
         # print(df)
         
-        # Chamar os algoritmo de agrupamento
-        # run_kmeans(df)
+        # Chamar os algoritmo de agrupamento        
         X_scaled = kmeans.preprocess(df)
         optimal_k = kmeans.elbow(X_scaled)
         print ("k =  ", optimal_k)
