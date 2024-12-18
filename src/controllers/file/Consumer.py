@@ -57,7 +57,7 @@ def prepare_data(file_path):
         # ====================== AGRUPAMENTO COM DBSCAN ======================================
         
         # Definir melhores parametros
-        eps_values = np.linspace(0.5, 5, 10)
+        eps_values = np.linspace(0.5, 5, 10) 
         min_samples_values = range(3, 10)
         best_params = dbscan.find_best_params(X_scaled, eps_values, min_samples_values)
 
