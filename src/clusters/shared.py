@@ -20,7 +20,7 @@ def preprocess(df):
 
     # Normalizar os dados
     scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
+    X_scaled = scaler.fit_transform(X) 
     
     return X_scaled
 
