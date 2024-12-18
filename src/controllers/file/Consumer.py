@@ -3,12 +3,15 @@ import tempfile
 import subprocess
 import pandas as pd
 from clusters import kmeans
+from clusters import shared
+import numpy as np
+from clusters import dbscan
 
 def prepare_data(file_path):
     # Lê os dados do arquivo
     with open(file_path, 'r') as file:
-        data = json.load(file)
-
+        data = json.load(file)        
+        
         # Dicionário para armazenar os dados por tipo de sensor
         sensor_columns = {}
 
@@ -33,16 +36,40 @@ def prepare_data(file_path):
 
         # Criação do DataFrame com pandas
         df = pd.DataFrame(sensor_columns)
-
-        # print(df)
+        df.to_csv("meu_dataset.csv", ",", index=False)                
         
-        # Chamar os algoritmo de agrupamento        
-        X_scaled = kmeans.preprocess(df)
+        # Preprocess
+        X_scaled = shared.preprocess(df)
+        
+        # ====================== AGRUPAMENTO COM KMEANS ======================================
+                        
+        # Calculate the optimal k        
         optimal_k = kmeans.elbow(X_scaled)
-        print ("k =  ", optimal_k)
-        kmeans.run_kmeans(X_scaled, optimal_k)
+        print ("Clusters: ", optimal_k)
         
-        # Enviar para o solid o resultado do agrupamento
+        # Run kmeans
+        results, params = kmeans.run_kmeans(X_scaled, optimal_k)
+        
+        
+        print("Melhores Resultados Kmeans (Silhouete, Davies_Bouldin, Calinski_Harabasz):", results)   
+        
+        
+        # ====================== AGRUPAMENTO COM DBSCAN ======================================
+        
+        # Definir melhores parametros
+        eps_values = np.linspace(0.5, 5, 10)
+        min_samples_values = range(3, 10)
+        best_params = dbscan.find_best_params(X_scaled, eps_values, min_samples_values)
+
+        # Realizar o agrupamento
+        best_results = dbscan.run (X_scaled, best_params[0], best_params[1]) 
+        
+        # best_results = dbscan.run (X_scaled, 0.5, 3) 
+                
+        print("Melhores parâmetros (eps, samples):", best_params)
+        print("Melhores Resultados DBScan (Silhouete, Davies_Bouldin, Calinski_Harabasz, n_clusters, n_outliers):", best_results)                
+        
+        # ====================== SAVE RESULTS INTO SOLID ======================================
         
         
 

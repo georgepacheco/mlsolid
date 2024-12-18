@@ -3,13 +3,14 @@ import pandas as pd
 from clusters import kmeans
 
 if __name__ == "__main__":
-    # print("Iniciando execução do main.py...")
-    # webid = "https://192.168.0.111:3000/Joao/profile/card#me"
-    # sensorType = ["AirThermometer", "HumiditySensor"]
+    print("Iniciando execução do main.py...")
+    webid = "https://192.168.0.111:3000/Joao/profile/card#me"
+    sensorType_health = ["Glucometer", "HeartBeatSensor", "BloodPressureSensor", "BodyThermometer", "SkinConductanceSensor", "Accelerometer", "PulseOxymeter"]
+    sensorType_env = ["AirThermometer", "HumiditySensor"]
     
-    # process_data(webid, sensorType)  # Chama a função definida no consumer.py
+    process_data(webid, sensorType_health)  # Chama a função definida no consumer.py
     
-    # print("Execução concluída.")
+    print("Execução concluída.")
     
 
     # DATASET INTELAB ======================================================================
@@ -39,23 +40,23 @@ if __name__ == "__main__":
     # DATASET CONJUNTO =========================================================================        
     # collumns = ['Age','Blood Glucose Level(BGL)','Diastolic Blood Pressure','Systolic Blood Pressure','Heart Rate','Body Temperature','SPO2','Sweating  (Y/N)','Shivering (Y/N)','Diabetic/NonDiabetic (D/N)']
     
-    # Carregar dados
-    df = pd.read_csv("data/health_intel.csv", sep=",", engine='python')
+    # # Carregar dados
+    # df = pd.read_csv("data/health_intel.csv", sep=",", engine='python')
     
-    # Remove Collumns
-    df2 = df.drop(columns=['Age', 'Diabetic/NonDiabetic (D/N)'])
+    # # Remove Collumns
+    # # df2 = df.drop(columns=['Age', 'Diabetic/NonDiabetic (D/N)'])
     
-    df2 = df2.apply(pd.to_numeric, errors='coerce')
-    # print (df2.info())
+    # df2 = df.apply(pd.to_numeric, errors='coerce')
+    # # print (df2.info())
     
    
     # PROCESSAMENTO =========================================================================
-    X_scaled = kmeans.preprocess(df2)
+    # X_scaled = kmeans.preprocess(df2)
     # print (X_scaled)
     
-    optimal_k = kmeans.elbow(X_scaled)
+    # optimal_k = kmeans.elbow(X_scaled)
     
-    results, params = kmeans.run_kmeans(X_scaled, optimal_k)
+    # results, params = kmeans.run_kmeans(X_scaled, optimal_k)
     
-    print ("Clusters: ", optimal_k)
-    print("Melhores Resultados (Silhouete, Davies_Bouldin, Calinski_Harabasz):", results)
+    # print ("Clusters: ", optimal_k)
+    # print("Melhores Resultados (Silhouete, Davies_Bouldin, Calinski_Harabasz):", results)

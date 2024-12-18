@@ -1,43 +1,18 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
-from sklearn.decomposition import PCA
 from sklearn.datasets import load_digits
-from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import silhouette_score
 from sklearn.metrics import davies_bouldin_score
 from sklearn.metrics import calinski_harabasz_score
 from kneed import KneeLocator
-
-def preprocess(df):
-    
-    # Substituir valores ausentes (pd.NA) pela média da respectiva coluna
-    df = df.fillna(df.mean())
-    
-    # Transformar variáveis categóricas em colunas numéricas binárias
-    X = pd.get_dummies(df)
-    
-    # Certificar-se de que todos os dados estão em formato numérico
-    X = X.apply(pd.to_numeric)  
-
-    # Verifique se há valores ausentes após as transformações
-    if X.isnull().values.any():
-        print("Ainda existem valores NaN no DataFrame!")
-        X = X.dropna()
-
-    # Normalizar os dados
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
-    
-    return X_scaled
 
 
 def elbow(X_scaled):
        
     inertias = []
     wcss = []
-    range_clusters = range(1, 11)
+    range_clusters = range(1, 20)
 
     for k in range_clusters:
         kmeans = KMeans(n_init='auto', n_clusters=k, random_state=42)
@@ -48,9 +23,7 @@ def elbow(X_scaled):
     # Usar o kneed para encontrar o cotovelo
     knee_locator = KneeLocator(range_clusters, wcss, curve="convex", direction="decreasing")
     optimal_k = knee_locator.knee
-
-    # Exibir o número ideal de clusters
-    # print(f"Número ideal de clusters: {optimal_k}")
+    
     return optimal_k
 
     # # Plotar o método do cotovelo
@@ -93,16 +66,3 @@ def run_kmeans(X_scaled, k):
     
     # pca(X_scaled, kmeans)
 
-def pca(X_scaled, kmeans):
-        # Reduzir os dados para 2D com PCA
-    pca = PCA(n_components=2)
-    reduced_data = pca.fit_transform(X_scaled)
-
-    # Plotar os clusters
-    plt.scatter(reduced_data[:, 0], reduced_data[:, 1], c=kmeans.labels_)
-    plt.title("Visualização dos Clusters usando PCA")
-    plt.xlabel("Componente 1")
-    plt.ylabel("Componente 2")
-    # plt.show()
-    plt.savefig('plot_pca.png')
-    plt.close()
