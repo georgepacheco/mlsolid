@@ -6,5 +6,6 @@ export const Environment = {
     // IDP: "https://147.79.82.127:3003/",    
     IDP: "https://192.168.0.111:3000/",
     LOGIN: "home_simulator@fotsimulator.com",
-    PASSWORD: "simulator2024",    
+    PASSWORD: "simulator2024",
+    SIM_API_URL: "https://192.168.0.111/api/saveMetrics"    
 }

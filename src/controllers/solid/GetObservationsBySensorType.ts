@@ -9,10 +9,6 @@ import { QueryEngine } from "@comunica/query-sparql-solid";
 import { login } from "../../shared/middlewares/Login";
 
 
-interface IParamProps {
-    type?: string;
-}
-
 /**
  * 
  * @param webId of the user's repository from which the data will be obtained. 

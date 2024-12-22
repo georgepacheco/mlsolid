@@ -4,8 +4,8 @@ import subprocess
 import pandas as pd
 from clusters import kmeans
 from clusters import shared
-import numpy as np
 from clusters import dbscan
+import numpy as np
 
 def prepare_data(file_path):
     # Lê os dados do arquivo
@@ -43,35 +43,50 @@ def prepare_data(file_path):
         
         # ====================== AGRUPAMENTO COM KMEANS ======================================
                         
-        # Calculate the optimal k        
-        optimal_k = kmeans.elbow(X_scaled)
-        print ("Clusters: ", optimal_k)
+        result_kmeans = group_kmeans(X_scaled)
         
-        # Run kmeans
-        results, params = kmeans.run_kmeans(X_scaled, optimal_k)
-        
-        
-        print("Melhores Resultados Kmeans (Silhouete, Davies_Bouldin, Calinski_Harabasz):", results)   
-        
+        print("Melhores Resultados Kmeans (Silhouete, Davies_Bouldin, Calinski_Harabasz):", result_kmeans)  
         
         # ====================== AGRUPAMENTO COM DBSCAN ======================================
         
-        # Definir melhores parametros
-        eps_values = np.linspace(0.5, 5, 10) 
-        min_samples_values = range(3, 10)
-        best_params = dbscan.find_best_params(X_scaled, eps_values, min_samples_values)
-
-        # Realizar o agrupamento
-        best_results = dbscan.run (X_scaled, best_params[0], best_params[1]) 
-        
-        # best_results = dbscan.run (X_scaled, 0.5, 3) 
-                
-        print("Melhores parâmetros (eps, samples):", best_params)
-        print("Melhores Resultados DBScan (Silhouete, Davies_Bouldin, Calinski_Harabasz, n_clusters, n_outliers):", best_results)                
+        result_dbscan = group_dbscan(X_scaled)
+        print("Melhores parâmetros (eps, samples):", result_dbscan[1])
+        print("Melhores Resultados DBScan (Silhouete, Davies_Bouldin, Calinski_Harabasz, n_clusters, n_outliers):", result_dbscan[0])                
         
         # ====================== SAVE RESULTS INTO SOLID ======================================
         
+        # enviar o melhor valor para o solid
+        if (result_kmeans[0] > result_dbscan[1][0]):
+            # Executa o script Node.js para gerar os dados
+            subprocess.run(["node", "../dist/controllers/file/SaveMetrics.js", webid, result_kmeans], check=True)
+        else:
+            # Executa o script Node.js para gerar os dados
+            subprocess.run(["node", "../dist/controllers/file/SaveMetrics.js", webid, result_dbscan], check=True)
         
+        
+def group_kmeans(X_scaled):
+    # Calculate the optimal k        
+    optimal_k = kmeans.elbow(X_scaled)
+    print ("Clusters: ", optimal_k)
+    
+    # Run kmeans
+    results, params = kmeans.run_kmeans(X_scaled, optimal_k)
+    return results
+    
+def group_dbscan(X_scaled):
+     
+    # Definir melhores parametros
+    eps_values = np.linspace(0.5, 5, 10) 
+    min_samples_values = range(3, 10)
+    best_params = dbscan.find_best_params(X_scaled, eps_values, min_samples_values)
+
+    # Realizar o agrupamento
+    best_results = dbscan.run (X_scaled, best_params[0], best_params[1]) 
+    
+    # best_results = dbscan.run (X_scaled, 0.5, 3) 
+    return (best_results, best_params)
+            
+            
 
 def process_data (webid, sensorType): 
     # Arquivo temporário para comunicação
@@ -96,3 +111,16 @@ def process_data (webid, sensorType):
             import os
             os.remove(temp_file_path)
             print("Arquivo temporário removido.")
+
+if __name__ == "__main__":
+    
+    print("Iniciando execução do Consumer...")
+    webid = "https://192.168.0.111:3000/Joao/profile/card#me"
+    sensorType_health = ["Glucometer", "HeartBeatSensor", "BloodPressureSensor", "BodyThermometer", "SkinConductanceSensor", "Accelerometer", "PulseOxymeter"]
+    sensorType_env = ["AirThermometer", "HumiditySensor"]
+    
+    process_data(webid, sensorType_health)  # Chama a função definida no consumer.py
+    
+    process_data(webid, sensorType_env)
+    
+    print("Execução concluída.")

@@ -1,18 +1,40 @@
-import pandas as pd
-import numpy as np
+import time
+from memory_profiler import memory_usage
 
-# Simulação do seu DataFrame com <NA> como valores nulos
-data = {
-    0: [68, 68, 66, 68, 68, pd.NA, pd.NA, pd.NA, pd.NA, pd.NA],
-    1: [97, 96, 97, 97, 99, pd.NA, pd.NA, pd.NA, pd.NA, pd.NA],
-    2: [17.803, 18.7928, 20.939, 23.6144, 19.4004, 18.391, 22.5756, 21.6054, 23.3694, 23.2714]
-}
+def profile_memory_and_time(func):
+    def wrapper(*args, **kwargs):
+        # Medir uso de memória inicial
+        mem_before = memory_usage()[0]
 
-df = pd.DataFrame(data)
-print (df)
-# Substituindo os valores <NA> pela média da respectiva coluna
-df.fillna(df.mean(), inplace=True)
+        # Medir tempo inicial
+        start_time = time.time()
 
-# Exibindo o DataFrame resultante
-print ("após")
-print(df)
+        # Monitorar o uso de memória enquanto a função é executada
+        mem_during = memory_usage((func, args, kwargs), interval=0.1)
+
+        # Medir tempo final
+        end_time = time.time()
+        # Medir uso de memória final
+        mem_after = memory_usage()[0]
+
+        # Calcular tempo e memória
+        elapsed_time = end_time - start_time
+        max_mem_during = max(mem_during) if mem_during else mem_before
+        mem_used = max(max_mem_during, mem_after) - mem_before
+
+        print(f"Função '{func.__name__}' levou {elapsed_time:.4f} segundos")
+        print(f"Memória antes: {mem_before:.2f} MiB")
+        print(f"Memória máxima durante: {max_mem_during:.2f} MiB")
+        print(f"Memória após: {mem_after:.2f} MiB")
+        print(f"Uso total de memória: {mem_used:.2f} MiB")
+
+        return func(*args, **kwargs)
+    return wrapper
+
+@profile_memory_and_time
+def some_function():
+    data = [i ** 2 for i in range(10**6)]  # Exemplo que consome memória
+    return sum(data)
+
+if __name__ == "__main__":
+    some_function()
