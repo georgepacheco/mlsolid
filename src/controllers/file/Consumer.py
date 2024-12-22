@@ -56,12 +56,14 @@ def prepare_data(file_path):
         # ====================== SAVE RESULTS INTO SOLID ======================================
         
         # enviar o melhor valor para o solid
-        if (result_kmeans[0] > result_dbscan[1][0]):
+        if (result_kmeans[0] > result_dbscan[0][0]):
             # Executa o script Node.js para gerar os dados
-            subprocess.run(["node", "../dist/controllers/file/SaveMetrics.js", webid, result_kmeans], check=True)
+            # print ('Enviando ... ', str(result_kmeans))
+            subprocess.run(["node", "../dist/controllers/file/SaveMetrics.js", webid, str(result_kmeans)], check=True)
         else:
             # Executa o script Node.js para gerar os dados
-            subprocess.run(["node", "../dist/controllers/file/SaveMetrics.js", webid, result_dbscan], check=True)
+            # print ('Enviando ... ', str(result_dbscan[0]))
+            subprocess.run(["node", "../dist/controllers/file/SaveMetrics.js", webid, str(result_dbscan[0])], check=True)
         
         
 def group_kmeans(X_scaled):
