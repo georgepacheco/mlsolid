@@ -1,10 +1,11 @@
 import { login } from "../../shared/middlewares/Login";
 import { getFile, getSourceUrl, overwriteFile } from "@inrupt/solid-client";
 
-export interface IMetrics  {
+export interface IMetrics {
     silhouette: number,
-    davies_bouldin: number
-    calinski_harabasz: number
+    davies_bouldin: number,
+    calinski_harabasz: number,
+    domain: string
 }
 
 const getSourcePath = (webid: string) => {
@@ -16,15 +17,28 @@ const getSourcePath = (webid: string) => {
 }
 
 export const saveMetrics = async (webId: string, metrics: IMetrics) => {
-    
-    const authFetch = await login();
 
-    const sourcePath = getSourcePath(webId) + `/private/metrics.json`;        
+    const authFetch = await login();
+    const sourcePath = getSourcePath(webId) + `/private/metrics.json`;
+
+    let allMetrics: IMetrics[] = [];
+    const result = await getMetrics(webId);
+    if (!(result instanceof Error)) {
+        allMetrics = result;
+    }
+    console.log(allMetrics);
+    const existingRecord = allMetrics.findIndex(item => item.domain === metrics.domain);
+
+    if (existingRecord !== -1) {
+        allMetrics[existingRecord] = metrics
+    } else {
+        allMetrics.push(metrics);
+    }
 
     try {
         await overwriteFile(
             sourcePath,
-            new File([JSON.stringify(metrics)], 'metrics.json', { type: "application/json" }),
+            new File([JSON.stringify(allMetrics)], 'metrics.json', { type: "application/json" }),
             { fetch: authFetch }
         );
     } catch (error) {
@@ -32,22 +46,23 @@ export const saveMetrics = async (webId: string, metrics: IMetrics) => {
     }
 }
 
-export const getMetrics = async (webId: string): Promise<IMetrics | Error> => {
-    
+export const getMetrics = async (webId: string): Promise<IMetrics[] | Error> => {
+
     const authFetch = await login();
-    const sourcePath = getSourcePath(webId) + `/private/metrics.json`;        
+    const sourcePath = getSourcePath(webId) + `/private/metrics.json`;
     try {
         const fileBlob = await getFile(sourcePath, { fetch: authFetch });
         const text = new TextDecoder().decode(await fileBlob.arrayBuffer());
-        const data: IMetrics = JSON.parse(text);
-        let metrics: IMetrics = {
-            silhouette: data.silhouette,            
-            davies_bouldin: data.davies_bouldin,
-            calinski_harabasz: data.calinski_harabasz,
-        };
-        return metrics;
+        const data: IMetrics[] = JSON.parse(text);
+        // let metrics: IMetrics = {
+        //     silhouette: data.silhouette,            
+        //     davies_bouldin: data.davies_bouldin,
+        //     calinski_harabasz: data.calinski_harabasz,
+        //     domain: data.domain
+        // };
+        return data;
     } catch (error) {
-        return new Error((error as { message: string }).message || 'Error saving cloud list file.');     
+        return new Error((error as { message: string }).message || 'Error saving cloud list file.');
     }
-    
+
 }

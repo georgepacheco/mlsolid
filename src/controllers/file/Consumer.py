@@ -7,7 +7,7 @@ from clusters import shared
 from clusters import dbscan
 import numpy as np
 
-def prepare_data(file_path):
+def prepare_data(file_path, domain):
     # Lê os dados do arquivo
     with open(file_path, 'r') as file:
         data = json.load(file)        
@@ -59,11 +59,11 @@ def prepare_data(file_path):
         if (result_kmeans[0] > result_dbscan[0][0]):
             # Executa o script Node.js para gerar os dados
             # print ('Enviando ... ', str(result_kmeans))
-            subprocess.run(["node", "../dist/controllers/file/SaveMetrics.js", webid, str(result_kmeans)], check=True)
+            subprocess.run(["node", "../dist/controllers/file/SaveMetrics.js", webid, str(result_kmeans), domain], check=True)
         else:
             # Executa o script Node.js para gerar os dados
             # print ('Enviando ... ', str(result_dbscan[0]))
-            subprocess.run(["node", "../dist/controllers/file/SaveMetrics.js", webid, str(result_dbscan[0])], check=True)
+            subprocess.run(["node", "../dist/controllers/file/SaveMetrics.js", webid, str(result_dbscan[0]), domain], check=True)
         
         
 def group_kmeans(X_scaled):
@@ -90,7 +90,7 @@ def group_dbscan(X_scaled):
             
             
 
-def process_data (webid, sensorType): 
+def process_data (webid, sensorType, domain): 
     # Arquivo temporário para comunicação
     with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as temp_file:
         temp_file_path = temp_file.name
@@ -103,7 +103,7 @@ def process_data (webid, sensorType):
             subprocess.run(["node", "../dist/controllers/file/GenerateFile.js", temp_file_path, webid, sensor_types_str], check=True)
 
             # Consome os dados gerados pelo Node.js
-            prepare_data(temp_file_path)
+            prepare_data(temp_file_path, domain)
 
         except subprocess.CalledProcessError as e:
             print("Erro ao executar o script Node.js:", e)
@@ -120,9 +120,12 @@ if __name__ == "__main__":
     webid = "https://192.168.0.111:3000/Joao/profile/card#me"
     sensorType_health = ["Glucometer", "HeartBeatSensor", "BloodPressureSensor", "BodyThermometer", "SkinConductanceSensor", "Accelerometer", "PulseOxymeter"]
     sensorType_env = ["AirThermometer", "HumiditySensor"]
+    sensorType_all = ["AirThermometer", "HumiditySensor","Glucometer", "HeartBeatSensor", "BloodPressureSensor", "BodyThermometer", "SkinConductanceSensor", "Accelerometer", "PulseOxymeter"]
     
-    process_data(webid, sensorType_health)  # Chama a função definida no consumer.py
+    process_data(webid, sensorType_health, "Health")  # Chama a função definida no consumer.py
     
-    process_data(webid, sensorType_env)
+    process_data(webid, sensorType_env, "Environment")
+    
+    process_data(webid, sensorType_all, "Environment_Health")
     
     print("Execução concluída.")
