@@ -1,28 +1,29 @@
 from controllers.file.Consumer import process_data
 import pandas as pd
 from clusters import kmeans
+from clusters import shared
 
 if __name__ == "__main__":
-    print("Iniciando execução do main.py...")
-    webid = "https://192.168.0.111:3000/Joao/profile/card#me"
-    sensorType_health = ["Glucometer", "HeartBeatSensor", "BloodPressureSensor", "BodyThermometer", "SkinConductanceSensor", "Accelerometer", "PulseOxymeter"]
-    sensorType_env = ["AirThermometer", "HumiditySensor"]
+    # print("Iniciando execução do main.py...")
+    # webid = "https://192.168.0.111:3000/Joao/profile/card#me"
+    # sensorType_health = ["Glucometer", "HeartBeatSensor", "BloodPressureSensor", "BodyThermometer", "SkinConductanceSensor", "Accelerometer", "PulseOxymeter"]
+    # sensorType_env = ["AirThermometer", "HumiditySensor"]
     
-    process_data(webid, sensorType_health)  # Chama a função definida no consumer.py
+    # process_data(webid, sensorType_health)  # Chama a função definida no consumer.py
     
-    print("Execução concluída.")
+    # print("Execução concluída.")
     
 
     # DATASET INTELAB ======================================================================
     # Lista com os nomes das colunas
-    # collumns = ['date', 'time', 'epoch', 'moteid', 'temperature', 'humidity', 'light', 'voltage']
+    collumns = ['date', 'time', 'epoch', 'moteid', 'temperature', 'humidity', 'light', 'voltage']
 
-    # # Carregar dados
-    # df = pd.read_csv("../data.txt", sep=" ", engine='python', names=collumns)
-    # df_1000 = df.iloc[:10000].copy()
+    # Carregar dados
+    df = pd.read_csv("../data.txt", sep=" ", engine='python', names=collumns)
+    df_1000 = df.iloc[:10000].copy()
     
-    # # Remove Collumns
-    # df2 = df_1000.drop(columns=['date','time', 'epoch', 'moteid',])
+    # Remove Collumns
+    df2 = df_1000.drop(columns=['date','time', 'epoch', 'moteid',])
     
 
     # DATASET SAÚDE =========================================================================
@@ -51,12 +52,15 @@ if __name__ == "__main__":
     
    
     # PROCESSAMENTO =========================================================================
-    # X_scaled = kmeans.preprocess(df2)
-    # print (X_scaled)
     
-    # optimal_k = kmeans.elbow(X_scaled)
+    X_scaled = shared.preprocess(df2)    
     
-    # results, params = kmeans.run_kmeans(X_scaled, optimal_k)
-    
-    # print ("Clusters: ", optimal_k)
-    # print("Melhores Resultados (Silhouete, Davies_Bouldin, Calinski_Harabasz):", results)
+    # Calculate the optimal k        
+    optimal_k = kmeans.elbow(X_scaled)
+        
+    # Run kmeans
+    results, params = kmeans.run_kmeans(X_scaled, optimal_k)
+              
+    print ("Clusters: ", optimal_k)
+    print ("Params (labels, centers): ", params)
+    print("Melhores Resultados (Silhouete, Davies_Bouldin, Calinski_Harabasz):", results)

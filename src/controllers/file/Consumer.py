@@ -36,7 +36,7 @@ def prepare_data(file_path, domain):
 
         # Criação do DataFrame com pandas
         df = pd.DataFrame(sensor_columns)
-        df.to_csv("meu_dataset.csv", ",", index=False)                
+        # df.to_csv("meu_dataset.csv", ",", index=False)                
         
         # Preprocess
         X_scaled = shared.preprocess(df)

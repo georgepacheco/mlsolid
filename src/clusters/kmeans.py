@@ -59,7 +59,7 @@ def run_kmeans(X_scaled, k):
     calinski_harabasz = calinski_harabasz_score(X_scaled, kmeans.labels_)
     # print("Coeficiente de Calinski-Harabasz:", calinski_harabasz)
 
-    params = (kmeans.labels_)
+    params = (kmeans.labels_, kmeans.cluster_centers_)
     results = (silhouette, davies_bouldin, calinski_harabasz)
     
     return (results, params)
