@@ -15,7 +15,7 @@ import { login } from "../../shared/middlewares/Login";
  * @param sensorType 
  * @returns all sensors of the type 'sensorType' and their observations
  */
-export const getObservationsBySensorType = async (webId: string, sensorType: string) => {
+export const getObservationsBySensorType = async (webId: string, sensorType: string, limit: number) => {
     // export const getObservationsBySensorType = async (req: Request<IParamProps, {}, IUser>, res: Response) => {
 
     const authFetch = await login();
@@ -25,8 +25,8 @@ export const getObservationsBySensorType = async (webId: string, sensorType: str
     const sourcePath = getSourcePath(webId) + `/private/sensors/${sensorType}.ttl`;
 
     const myEngine = new QueryEngine();
-
-    let query = await queryObservationBySensor(sensorType);
+   
+    let query = queryObservation(limit);
 
     const bindingsStream = await myEngine.queryBindings(query,
         {
@@ -41,8 +41,25 @@ export const getObservationsBySensorType = async (webId: string, sensorType: str
     return sensors;
 };
 
+const querySensors = () => {
+   let query = `
+        PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>
+        PREFIX iot-lite: <http://purl.oclc.org/NET/UNIS/fiware/iot-lite#>
+        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX m3: <http://purl.org/iot/vocab/m3-lite#>
+        PREFIX sosa: <http://www.w3.org/ns/sosa/>
+        PREFIX ssn: <https://www.w3.org/ns/ssn/>
+        PREFIX map: <http://example.com/soft-iot/>
 
-const queryObservationBySensor = (sensor: string) => {
+        SELECT ?sensor 
+        WHERE {
+            ?sensor rdf:subClassOf ssn:SensingDevice
+        }
+    `
+    return query; 
+}
+
+const queryObservation = (limit: number) => {
 
     let query = `
         PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>
@@ -60,6 +77,7 @@ const queryObservationBySensor = (sensor: string) => {
             ?observation sosa:hasSimpleResult ?resultvalue .
             ?observation sosa:resultTime ?resulttime
         }
+        
     `
     return query;
 }

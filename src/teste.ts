@@ -24,7 +24,7 @@ const doService = async () => {
 
     // const result = await SolidController.getObservationsBySensorType(user.webid, sensorType);
 
-    const result = await generateFile(user.webid, sensorType);
+    const result = await generateFile(user.webid, sensorType, 48);
 
     console.log('FIM')
 

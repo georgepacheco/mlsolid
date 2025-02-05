@@ -2,19 +2,25 @@ import json
 import tempfile
 import subprocess
 import pandas as pd
+import numpy as np
+import sys
+import os
+
+# Adiciona o diretório raiz do projeto ao sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
+
 from clusters import kmeans
 from clusters import shared
 from clusters import dbscan
-import numpy as np
 
 def prepare_data(file_path, domain):
     # Lê os dados do arquivo
     with open(file_path, 'r') as file:
         data = json.load(file)        
-        
+                
         # Dicionário para armazenar os dados por tipo de sensor
         sensor_columns = {}
-
+        
         # Processa os dados
         for sensor_data in data:
             sensor_type = sensor_data['sensorType']  
@@ -30,12 +36,14 @@ def prepare_data(file_path, domain):
 
         # Ajusta o tamanho das colunas para garantir alinhamento
         max_length = max(len(values) for values in sensor_columns.values())
+
         for sensor_type, values in sensor_columns.items():
             # Preenche com 'N/A' se houver colunas de tamanhos diferentes
             sensor_columns[sensor_type].extend([pd.NA] * (max_length - len(values)))
-
+	
         # Criação do DataFrame com pandas
         df = pd.DataFrame(sensor_columns)
+        print(df.info())
         # df.to_csv("meu_dataset.csv", ",", index=False)                
         
         # Preprocess
@@ -59,11 +67,11 @@ def prepare_data(file_path, domain):
         if (result_kmeans[0] > result_dbscan[0][0]):
             # Executa o script Node.js para gerar os dados
             # print ('Enviando ... ', str(result_kmeans))
-            subprocess.run(["node", "../dist/controllers/file/SaveMetrics.js", webid, str(result_kmeans), domain], check=True)
+            subprocess.run(["node", "../../../dist/controllers/file/SaveMetrics.js", webid, str(result_kmeans), domain], check=True)
         else:
             # Executa o script Node.js para gerar os dados
             # print ('Enviando ... ', str(result_dbscan[0]))
-            subprocess.run(["node", "../dist/controllers/file/SaveMetrics.js", webid, str(result_dbscan[0]), domain], check=True)
+            subprocess.run(["node", "../../../dist/controllers/file/SaveMetrics.js", webid, str(result_dbscan[0]), domain], check=True)
         
         
 def group_kmeans(X_scaled):
@@ -90,17 +98,17 @@ def group_dbscan(X_scaled):
             
             
 
-def process_data (webid, sensorType, domain): 
+def process_data (webid, sensorType, domain, limit): 
     # Arquivo temporário para comunicação
     with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as temp_file:
         temp_file_path = temp_file.name
-                
+        
         try:
             # Converte a lista de sensores em uma string separada por vírgulas
             sensor_types_str = ",".join(sensorType)
                        
             # Executa o script Node.js para gerar os dados
-            subprocess.run(["node", "../dist/controllers/file/GenerateFile.js", temp_file_path, webid, sensor_types_str], check=True)
+            subprocess.run(["node", "../../../dist/controllers/file/GenerateFile.js", temp_file_path, webid, sensor_types_str, limit], check=True)
 
             # Consome os dados gerados pelo Node.js
             prepare_data(temp_file_path, domain)
@@ -122,10 +130,12 @@ if __name__ == "__main__":
     sensorType_env = ["AirThermometer", "HumiditySensor"]
     sensorType_all = ["AirThermometer", "HumiditySensor","Glucometer", "HeartBeatSensor", "BloodPressureSensor", "BodyThermometer", "SkinConductanceSensor", "Accelerometer", "PulseOxymeter"]
     
-    process_data(webid, sensorType_health, "Health")  # Chama a função definida no consumer.py
+    qtd = "48"
     
-    process_data(webid, sensorType_env, "Environment")
+    process_data(webid, sensorType_health, "Health", qtd)  # Chama a função definida no consumer.py
     
-    process_data(webid, sensorType_all, "Environment_Health")
+    process_data(webid, sensorType_env, "Environment", qtd)
+    
+    process_data(webid, sensorType_all, "Environment_Health", qtd)
     
     print("Execução concluída.")

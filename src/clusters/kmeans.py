@@ -11,17 +11,17 @@ from kneed import KneeLocator
 def elbow(X_scaled):
        
     inertias = []
-    wcss = []
+    # wcss = []
     range_clusters = range(1, 20)
 
     for k in range_clusters:
         kmeans = KMeans(n_init='auto', n_clusters=k, random_state=42)
         kmeans.fit(X_scaled)
         inertias.append(kmeans.inertia_)
-        wcss.append(kmeans.inertia_)
+        # wcss.append(kmeans.inertia_)
            
     # Usar o kneed para encontrar o cotovelo
-    knee_locator = KneeLocator(range_clusters, wcss, curve="convex", direction="decreasing")
+    knee_locator = KneeLocator(range_clusters, inertias, curve="convex", direction="decreasing")
     optimal_k = knee_locator.knee
     
     return optimal_k

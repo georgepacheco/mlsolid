@@ -23,10 +23,10 @@ export const saveMetrics = async (webId: string, metrics: IMetrics) => {
 
     let allMetrics: IMetrics[] = [];
     const result = await getMetrics(webId);
-    if (!(result instanceof Error)) {
+    if (!(result instanceof Error)  && Array.isArray(result) ) {
         allMetrics = result;
     }
-    console.log(allMetrics);
+    console.log("Metricas: " + allMetrics);
     const existingRecord = allMetrics.findIndex(item => item.domain === metrics.domain);
 
     if (existingRecord !== -1) {
