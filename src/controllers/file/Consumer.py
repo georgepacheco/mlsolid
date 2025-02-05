@@ -53,35 +53,57 @@ def prepare_data(file_path, domain):
                         
         result_kmeans = group_kmeans(X_scaled)
         
-        print("Melhores Resultados Kmeans (Silhouete, Davies_Bouldin, Calinski_Harabasz):", result_kmeans)  
+        silhouette_norm_km = normalizeSilhouette(result_kmeans[0][0])
+        davies_norm_km = normalizeDavies(result_kmeans[0][1])
+        calinski_norm_km = normalize_calinski(result_kmeans[0][2])
         
+        print("Número de Clusters K-Means", result_kmeans[1])
+        print("Melhores Resultados Kmeans (Silhouete, Davies_Bouldin, Calinski_Harabasz):", result_kmeans)  
+        print("Melhores Resultados Kmeans Normalizados (Silhouete, Davies_Bouldin, Calinski_Harabasz):", silhouette_norm_km, davies_norm_km, calinski_norm_km)  
         # ====================== AGRUPAMENTO COM DBSCAN ======================================
         
         result_dbscan = group_dbscan(X_scaled)
+        silhouette_norm_dbs = normalizeSilhouette(result_dbscan[0][0])
+        davies_norm_dbs = normalizeDavies(result_dbscan[0][1])
+        calinski_norm_dbs = normalize_calinski(result_dbscan[0][2])
+        
+        print("Número de Cluesters DBSCAN", result_dbscan[0][3])
         print("Melhores parâmetros (eps, samples):", result_dbscan[1])
         print("Melhores Resultados DBScan (Silhouete, Davies_Bouldin, Calinski_Harabasz, n_clusters, n_outliers):", result_dbscan[0])                
         
+        print("Melhores Resultados DBScan Normalizados (Silhouete, Davies_Bouldin, Calinski_Harabasz):", silhouette_norm_dbs, davies_norm_dbs, calinski_norm_dbs)  
         # ====================== SAVE RESULTS INTO SOLID ======================================
         
         # enviar o melhor valor para o solid
-        if (result_kmeans[0] > result_dbscan[0][0]):
+        if (silhouette_norm_km > silhouette_norm_dbs):
             # Executa o script Node.js para gerar os dados
             # print ('Enviando ... ', str(result_kmeans))
-            subprocess.run(["node", "../../../dist/controllers/file/SaveMetrics.js", webid, str(result_kmeans), domain], check=True)
+            subprocess.run(["node", "../../../dist/controllers/file/SaveMetrics.js", webid, str(silhouette_norm_km), domain], check=True)
         else:
             # Executa o script Node.js para gerar os dados
             # print ('Enviando ... ', str(result_dbscan[0]))
-            subprocess.run(["node", "../../../dist/controllers/file/SaveMetrics.js", webid, str(result_dbscan[0]), domain], check=True)
+            subprocess.run(["node", "../../../dist/controllers/file/SaveMetrics.js", webid, str(silhouette_norm_dbs), domain], check=True)
+
+        
+        # # enviar o melhor valor para o solid
+        # if (result_kmeans[0] > result_dbscan[0][0]):
+        #     # Executa o script Node.js para gerar os dados
+        #     # print ('Enviando ... ', str(result_kmeans))
+        #     subprocess.run(["node", "../../../dist/controllers/file/SaveMetrics.js", webid, str(result_kmeans), domain], check=True)
+        # else:
+        #     # Executa o script Node.js para gerar os dados
+        #     # print ('Enviando ... ', str(result_dbscan[0]))
+        #     subprocess.run(["node", "../../../dist/controllers/file/SaveMetrics.js", webid, str(result_dbscan[0]), domain], check=True)
         
         
 def group_kmeans(X_scaled):
     # Calculate the optimal k        
     optimal_k = kmeans.elbow(X_scaled)
-    print ("Clusters: ", optimal_k)
+    # print ("Clusters: ", optimal_k)
     
     # Run kmeans
     results, params = kmeans.run_kmeans(X_scaled, optimal_k)
-    return results
+    return (results, optimal_k)
     
 def group_dbscan(X_scaled):
      
@@ -95,8 +117,19 @@ def group_dbscan(X_scaled):
     
     # best_results = dbscan.run (X_scaled, 0.5, 3) 
     return (best_results, best_params)
-            
-            
+
+# normalize to [0,1]            
+def normalizeSilhouette(value):             
+    return (value + 1) / 2;
+
+# normalize to [0,1]                
+def normalizeDavies (value):
+    print ("normalize davies")
+
+# normalize to [0,1]            
+def normalize_calinski(value):
+    print ("normalize calinski")
+
 
 def process_data (webid, sensorType, domain, limit): 
     # Arquivo temporário para comunicação
@@ -126,9 +159,10 @@ if __name__ == "__main__":
     
     print("Iniciando execução do Consumer...")
     webid = "https://192.168.0.111:3000/Joao/profile/card#me"
-    sensorType_health = ["Glucometer", "HeartBeatSensor", "BloodPressureSensor", "BodyThermometer", "SkinConductanceSensor", "Accelerometer", "PulseOxymeter"]
+    sensorType_health = ["Glucometer", "HeartBeatSensor", "SystolicBloodPressure", "DiastolicBloodPressure", "BodyThermometer", "SkinConductanceSensor", "Accelerometer", "PulseOxymeter"]
     sensorType_env = ["AirThermometer", "HumiditySensor"]
-    sensorType_all = ["AirThermometer", "HumiditySensor","Glucometer", "HeartBeatSensor", "BloodPressureSensor", "BodyThermometer", "SkinConductanceSensor", "Accelerometer", "PulseOxymeter"]
+   # sensorType_all = ["AirThermometer", "HumiditySensor","Glucometer", "HeartBeatSensor", "BloodPressureSensor", "BodyThermometer", "SkinConductanceSensor", "Accelerometer", "PulseOxymeter"]
+    sensorType_all = ["AirThermometer", "HumiditySensor","Glucometer", "HeartBeatSensor", "SystolicBloodPressure", "DiastolicBloodPressure", "BodyThermometer", "SkinConductanceSensor", "Accelerometer", "PulseOxymeter"]
     
     qtd = "48"
     
