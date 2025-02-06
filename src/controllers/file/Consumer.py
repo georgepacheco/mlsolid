@@ -7,6 +7,7 @@ import sys
 import os
 from sklearn.preprocessing import MinMaxScaler
 from Performance import medir_performance
+import gc
 
 # Adiciona o diretório raiz do projeto ao sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
@@ -61,18 +62,18 @@ def run_algorithms(X_scaled):
         result_kmeans = medir_performance(group_kmeans, X_scaled)
         print("\n")
         print("**** K-Means Execution ****")
-        print(f"Tempo de execução: {result_kmeans['tempo_execucao']:.4f} segundos")
-        print(f"Uso de memória: {result_kmeans['uso_memoria_MB']:.2f} MB")
-        print(f"Uso médio de CPU: {result_kmeans['uso_cpu_percent']:.2f}%")
+        print(f"Tempo de execução: {result_kmeans['tempo_execucao']:.8f} segundos")
+        print(f"Uso de memória: {result_kmeans['uso_memoria_MB']:.8f} MB")
+        print(f"Uso médio de CPU: {result_kmeans['uso_cpu_percent']:.8f}%")
         
         
         # ====================== AGRUPAMENTO COM DBSCAN ======================================
         result_dbscan = medir_performance(group_dbscan, X_scaled)
         print("\n")
         print("**** DBSCAN Execution ****")
-        print(f"Tempo de execução: {result_dbscan['tempo_execucao']:.4f} segundos")
-        print(f"Uso de memória: {result_dbscan['uso_memoria_MB']:.2f} MB")
-        print(f"Uso médio de CPU: {result_dbscan['uso_cpu_percent']:.2f}%")
+        print(f"Tempo de execução: {result_dbscan['tempo_execucao']:.8f} segundos")
+        print(f"Uso de memória: {result_dbscan['uso_memoria_MB']:.8f} MB")
+        print(f"Uso médio de CPU: {result_dbscan['uso_cpu_percent']:.8f}%")
         
         return (result_kmeans['resultado'],result_dbscan['resultado'])
         
@@ -94,7 +95,8 @@ def calculate_metrics(result_kmeans, result_dbscan):
         
         print("\n")
         print("***** Results Kmeans *****")
-        print("Número de Clusters K-Means", result_kmeans[1])
+        print("Número de Clusters K-Means: ", result_kmeans[1])
+        print('Objetos por cluster: ', result_kmeans[2])
         print("Melhores Resultados Kmeans (Silhouete, Davies_Bouldin, Calinski_Harabasz):", result_kmeans)  
         print("Melhores Resultados Kmeans Normalizados (Silhouete, Davies_Bouldin, Calinski_Harabasz):", silhouette_norm_km, davies_norm_km)  
                    
@@ -128,7 +130,7 @@ def group_kmeans(X_scaled):
     
     # Run kmeans
     results, params = kmeans.run_kmeans(X_scaled, optimal_k)
-    return (results, optimal_k)
+    return (results, optimal_k, params[2])
     
 def group_dbscan(X_scaled):
      
@@ -205,114 +207,129 @@ if __name__ == "__main__":
     
     
     print("=========== HEALTH DOMAIN ==========\n")
+    # gc.collect()
     dados = medir_performance(process_data, webid, sensorType_health, qtd)
     print("\n")
     print("**** PREPROCESS TIME ****")
-    print(f"Tempo de execução: {dados['tempo_execucao']:.4f} segundos")
-    print(f"Uso de memória: {dados['uso_memoria_MB']:.2f} MB")
-    print(f"Uso médio de CPU: {dados['uso_cpu_percent']:.2f}%")     
+    print(f"Tempo de execução: {dados['tempo_execucao']:.8f} segundos")
+    print(f"Uso de memória: {dados['uso_memoria_MB']:.8f} MB")
+    print(f"Uso médio de CPU: {dados['uso_cpu_percent']:.8f}%")     
 
     # X_scaled = process_data(webid, sensorType_health, qtd)  # Chama a função definida no consumer.py
     
     # Envolve cálculo de paramêtros, execução do algoritmo e cálculo dos indices (silhouette, davies e calinski)
-    dados2 = medir_performance(run_algorithms, dados['resultado'])
-    print("\n")
-    print("**** RUN ALGORITHMS TIME ****")
-    print(f"Tempo de execução: {dados2['tempo_execucao']:.4f} segundos")
-    print(f"Uso de memória: {dados2['uso_memoria_MB']:.2f} MB")
-    print(f"Uso médio de CPU: {dados2['uso_cpu_percent']:.2f}%") 
-    results = dados2['resultado']
+    # gc.collect()
+    # dados2 = medir_performance(run_algorithms, dados['resultado'])
+    # print("\n")
+    # print("**** RUN ALGORITHMS TIME ****")
+    # print(f"Tempo de execução: {dados2['tempo_execucao']:.4f} segundos")
+    # print(f"Uso de memória: {dados2['uso_memoria_MB']:.2f} MB")
+    # print(f"Uso médio de CPU: {dados2['uso_cpu_percent']:.2f}%") 
+    # results = dados2['resultado']
+    results = run_algorithms(dados['resultado'])
     
     # Usa os índices calculados anteriormente para gerar as métricas
+    # gc.collect()
     dados3 = medir_performance(calculate_metrics, results[0], results[1])
     print("\n")
     print("**** CALCULATE METRICS TIME ****")
-    print(f"Tempo de execução: {dados3['tempo_execucao']:.4f} segundos")
-    print(f"Uso de memória: {dados3['uso_memoria_MB']:.2f} MB")
-    print(f"Uso médio de CPU: {dados3['uso_cpu_percent']:.2f}%") 
+    print(f"Tempo de execução: {dados3['tempo_execucao']:.8f} segundos")
+    print(f"Uso de memória: {dados3['uso_memoria_MB']:.8f} MB")
+    print(f"Uso médio de CPU: {dados3['uso_cpu_percent']:.8f}%") 
     metrics = dados3['resultado']
     
+    # gc.collect()
     dados4 = medir_performance(save_metrics, metrics[0], metrics[1], "Health")
     print("\n")
     print("**** SAVE TIME ****")
-    print(f"Tempo de execução: {dados4['tempo_execucao']:.4f} segundos")
-    print(f"Uso de memória: {dados4['uso_memoria_MB']:.2f} MB")
-    print(f"Uso médio de CPU: {dados4['uso_cpu_percent']:.2f}%") 
+    print(f"Tempo de execução: {dados4['tempo_execucao']:.8f} segundos")
+    print(f"Uso de memória: {dados4['uso_memoria_MB']:.8f} MB")
+    print(f"Uso médio de CPU: {dados4['uso_cpu_percent']:.8f}%") 
     
     print("=========== ENVIRONMENT DOMAIN ==========\n")
     # X_scaled = process_data(webid, sensorType_env, qtd)
     # calculate_metrics (X_scaled, "Environment")
+    # gc.collect()
     dados = medir_performance(process_data, webid, sensorType_env, qtd)
     print("\n")
     print("**** PREPROCESS TIME ****")
-    print(f"Tempo de execução: {dados['tempo_execucao']:.4f} segundos")
-    print(f"Uso de memória: {dados['uso_memoria_MB']:.2f} MB")
-    print(f"Uso médio de CPU: {dados['uso_cpu_percent']:.2f}%")     
+    print(f"Tempo de execução: {dados['tempo_execucao']:.8f} segundos")
+    print(f"Uso de memória: {dados['uso_memoria_MB']:.8f} MB")
+    print(f"Uso médio de CPU: {dados['uso_cpu_percent']:.8f}%")     
 
     # X_scaled = process_data(webid, sensorType_health, qtd)  # Chama a função definida no consumer.py
     
     # Envolve cálculo de paramêtros, execução do algoritmo e cálculo dos indices (silhouette, davies e calinski)
-    dados2 = medir_performance(run_algorithms, dados['resultado'])
-    print("\n")
-    print("**** RUN ALGORITHMS TIME ****")
-    print(f"Tempo de execução: {dados2['tempo_execucao']:.4f} segundos")
-    print(f"Uso de memória: {dados2['uso_memoria_MB']:.2f} MB")
-    print(f"Uso médio de CPU: {dados2['uso_cpu_percent']:.2f}%") 
-    results = dados2['resultado']
+    # gc.collect()
+    # dados2 = medir_performance(run_algorithms, dados['resultado'])
+    # print("\n")
+    # print("**** RUN ALGORITHMS TIME ****")
+    # print(f"Tempo de execução: {dados2['tempo_execucao']:.4f} segundos")
+    # print(f"Uso de memória: {dados2['uso_memoria_MB']:.2f} MB")
+    # print(f"Uso médio de CPU: {dados2['uso_cpu_percent']:.2f}%") 
+    # results = dados2['resultado']
+    results = run_algorithms(dados['resultado'])
     
     # Usa os índices calculados anteriormente para gerar as métricas
+    # gc.collect()
     dados3 = medir_performance(calculate_metrics, results[0], results[1])
     print("\n")
     print("**** CALCULATE METRICS TIME ****")
-    print(f"Tempo de execução: {dados3['tempo_execucao']:.4f} segundos")
-    print(f"Uso de memória: {dados3['uso_memoria_MB']:.2f} MB")
-    print(f"Uso médio de CPU: {dados3['uso_cpu_percent']:.2f}%") 
+    print(f"Tempo de execução: {dados3['tempo_execucao']:.8f} segundos")
+    print(f"Uso de memória: {dados3['uso_memoria_MB']:.8f} MB")
+    print(f"Uso médio de CPU: {dados3['uso_cpu_percent']:.8f}%") 
     metrics = dados3['resultado']
     
+    # gc.collect()
     dados4 = medir_performance(save_metrics, metrics[0], metrics[1], "Environment")
     print("\n")
     print("**** SAVE TIME ****")
-    print(f"Tempo de execução: {dados4['tempo_execucao']:.4f} segundos")
-    print(f"Uso de memória: {dados4['uso_memoria_MB']:.2f} MB")
-    print(f"Uso médio de CPU: {dados4['uso_cpu_percent']:.2f}%")
+    print(f"Tempo de execução: {dados4['tempo_execucao']:.8f} segundos")
+    print(f"Uso de memória: {dados4['uso_memoria_MB']:.8f} MB")
+    print(f"Uso médio de CPU: {dados4['uso_cpu_percent']:.8f}%")
     
     
  
     print("=========== ENVIRONMENT_HEALTH DOMAIN ==========\n")   
     # X_scaled = process_data(webid, sensorType_all, qtd)
     # calculate_metrics (X_scaled, "Environment_Health")
+    # gc.collect()
     dados = medir_performance(process_data, webid, sensorType_all, qtd)
     print("\n")
     print("**** PREPROCESS TIME ****")
-    print(f"Tempo de execução: {dados['tempo_execucao']:.4f} segundos")
-    print(f"Uso de memória: {dados['uso_memoria_MB']:.2f} MB")
-    print(f"Uso médio de CPU: {dados['uso_cpu_percent']:.2f}%")     
+    print(f"Tempo de execução: {dados['tempo_execucao']:.8f} segundos")
+    print(f"Uso de memória: {dados['uso_memoria_MB']:.8f} MB")
+    print(f"Uso médio de CPU: {dados['uso_cpu_percent']:.8f}%")     
 
     # X_scaled = process_data(webid, sensorType_health, qtd)  # Chama a função definida no consumer.py
     
     # Envolve cálculo de paramêtros, execução do algoritmo e cálculo dos indices (silhouette, davies e calinski)
-    dados2 = medir_performance(run_algorithms, dados['resultado'])
-    print("\n")
-    print("**** RUN ALGORITHMS TIME ****")
-    print(f"Tempo de execução: {dados2['tempo_execucao']:.4f} segundos")
-    print(f"Uso de memória: {dados2['uso_memoria_MB']:.2f} MB")
-    print(f"Uso médio de CPU: {dados2['uso_cpu_percent']:.2f}%") 
-    results = dados2['resultado']
+    # gc.collect()
+    # dados2 = medir_performance(run_algorithms, dados['resultado'])
+    # print("\n")
+    # print("**** RUN ALGORITHMS TIME ****")
+    # print(f"Tempo de execução: {dados2['tempo_execucao']:.4f} segundos")
+    # print(f"Uso de memória: {dados2['uso_memoria_MB']:.2f} MB")
+    # print(f"Uso médio de CPU: {dados2['uso_cpu_percent']:.2f}%") 
+    # results = dados2['resultado']
+    results = run_algorithms(dados['resultado'])
     
     # Usa os índices calculados anteriormente para gerar as métricas
+    # gc.collect()
     dados3 = medir_performance(calculate_metrics, results[0], results[1])
     print("\n")
     print("**** CALCULATE METRICS TIME ****")
-    print(f"Tempo de execução: {dados3['tempo_execucao']:.4f} segundos")
-    print(f"Uso de memória: {dados3['uso_memoria_MB']:.2f} MB")
-    print(f"Uso médio de CPU: {dados3['uso_cpu_percent']:.2f}%") 
+    print(f"Tempo de execução: {dados3['tempo_execucao']:.8f} segundos")
+    print(f"Uso de memória: {dados3['uso_memoria_MB']:.8f} MB")
+    print(f"Uso médio de CPU: {dados3['uso_cpu_percent']:.8f}%") 
     metrics = dados3['resultado']
     
+    # gc.collect()
     dados4 = medir_performance(save_metrics, metrics[0], metrics[1], "Environment_Health")
     print("\n")
     print("**** SAVE TIME ****")
-    print(f"Tempo de execução: {dados4['tempo_execucao']:.4f} segundos")
-    print(f"Uso de memória: {dados4['uso_memoria_MB']:.2f} MB")
-    print(f"Uso médio de CPU: {dados4['uso_cpu_percent']:.2f}%")
+    print(f"Tempo de execução: {dados4['tempo_execucao']:.8f} segundos")
+    print(f"Uso de memória: {dados4['uso_memoria_MB']:.8f} MB")
+    print(f"Uso médio de CPU: {dados4['uso_cpu_percent']:.8f}%")
     
     print("Execução concluída.")

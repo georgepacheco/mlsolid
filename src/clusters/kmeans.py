@@ -46,7 +46,10 @@ def run_kmeans(X_scaled, k):
     # automaticamente (geralmente otimizado para um número adequado). Antes dessa versão, o padrão era 10 inicializações.    
     kmeans = KMeans(n_init='auto', n_clusters=k, random_state=42)
     kmeans.fit(X_scaled)
-
+	
+    unique, counts = np.unique(kmeans.labels_, return_counts=True)
+    cluster_counts = dict(zip(unique, counts))
+    
     # Verificar as labels geradas pelo K-Means
     # print("Labels de K-Means:", kmeans.labels_)
 
@@ -59,7 +62,7 @@ def run_kmeans(X_scaled, k):
     calinski_harabasz = calinski_harabasz_score(X_scaled, kmeans.labels_)
     # print("Coeficiente de Calinski-Harabasz:", calinski_harabasz)
 
-    params = (kmeans.labels_, kmeans.cluster_centers_)
+    params = (kmeans.labels_, kmeans.cluster_centers_, cluster_counts)
     results = (silhouette, davies_bouldin, calinski_harabasz)
     
     return (results, params)

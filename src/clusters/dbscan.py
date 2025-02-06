@@ -47,12 +47,15 @@ def run (X, eps, min_samples):
     labels = dbscan.fit_predict(X)
     n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
     
+    unique, counts = np.unique(labels, return_counts=True)
+    cluster_counts = dict(zip(unique, counts))
+    
     # Contar o número de outliers
     n_outliers = np.sum(labels == -1)
     if len(set(labels)) > 1:
         silhouette = silhouette_score(X, labels)
         davies_bouldin = davies_bouldin_score(X, labels)
         calinski_harabasz = calinski_harabasz_score(X, labels)
-        return (silhouette, davies_bouldin, calinski_harabasz, n_clusters, n_outliers)
+        return (silhouette, davies_bouldin, calinski_harabasz, n_clusters, n_outliers,cluster_counts)
     else:     
         return None
