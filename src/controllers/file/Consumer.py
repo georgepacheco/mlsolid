@@ -7,7 +7,9 @@ import sys
 import os
 from sklearn.preprocessing import MinMaxScaler
 from Performance import medir_performance
-import gc
+from dataclasses import asdict
+from Model import FileManager, Results, Domain, Statistics, Algorithms
+
 
 # Adiciona o diretório raiz do projeto ao sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
@@ -75,7 +77,8 @@ def run_algorithms(X_scaled):
         print(f"Uso de memória: {result_dbscan['uso_memoria_MB']:.8f} MB")
         print(f"Uso médio de CPU: {result_dbscan['uso_cpu_percent']:.8f}%")
         
-        return (result_kmeans['resultado'],result_dbscan['resultado'])
+        # return (result_kmeans['resultado'],result_dbscan['resultado'])
+        return (result_kmeans,result_dbscan)
         
         
 def calculate_metrics(result_kmeans, result_dbscan):
@@ -102,8 +105,10 @@ def calculate_metrics(result_kmeans, result_dbscan):
                    
         print("\n")        
         print("***** Results DBSCAN *****")
-        print("Número de Cluesters DBSCAN", result_dbscan[0][3])
-        print("Melhores parâmetros (eps, samples):", result_dbscan[1])
+	# result =  ((silhouette, davies_bouldin, calinski_harabasz), (n_clusters, n_outliers,cluster_counts), (eps, min_samples) )
+        # result =  ((0.26976905276031005, 1.5007555451992962, 49.594810183036635), (2, 0, {0: 301, 1: 35}), (3.0, 3))
+        print("Número de Clusters DBSCAN", result_dbscan[1][0])
+        print("Melhores parâmetros (eps, samples):", result_dbscan[2])
         print("Melhores Resultados DBScan (Silhouete, Davies_Bouldin, Calinski_Harabasz, n_clusters, n_outliers):", result_dbscan[0])                        
         print("Melhores Resultados DBScan Normalizados (Silhouete, Davies_Bouldin, Calinski_Harabasz):", silhouette_norm_dbs, davies_norm_dbs)  
                 
@@ -130,6 +135,8 @@ def group_kmeans(X_scaled):
     
     # Run kmeans
     results, params = kmeans.run_kmeans(X_scaled, optimal_k)
+    
+    # retorna indices, n_clusters, clusters_count
     return (results, optimal_k, params[2])
     
 def group_dbscan(X_scaled):
@@ -140,10 +147,10 @@ def group_dbscan(X_scaled):
     best_params = dbscan.find_best_params(X_scaled, eps_values, min_samples_values)
 
     # Realizar o agrupamento
-    best_results = dbscan.run (X_scaled, best_params[0], best_params[1]) 
+    best_results, params = dbscan.run (X_scaled, best_params[0], best_params[1]) 
     
     # best_results = dbscan.run (X_scaled, 0.5, 3) 
-    return (best_results, best_params)
+    return (best_results, params, best_params)
 
 # normalize to [0,1]            
 def normalizeSilhouette(value):             
@@ -203,34 +210,74 @@ if __name__ == "__main__":
     sensorType_env = ["AirThermometer", "HumiditySensor"]
    # sensorType_all = ["AirThermometer", "HumiditySensor","Glucometer", "HeartBeatSensor", "BloodPressureSensor", "BodyThermometer", "SkinConductanceSensor", "Accelerometer", "PulseOxymeter"]
     sensorType_all = ["AirThermometer", "HumiditySensor","Glucometer", "HeartBeatSensor", "SystolicBloodPressure", "DiastolicBloodPressure", "BodyThermometer", "SkinConductanceSensor", "Accelerometer", "PulseOxymeter"]
-    qtd = "48"
+    qtd = "30"
     
-    
+    # Criando a instância do FileManager
+    file_manager = FileManager("statistic_results.json")
+
+    # Carregando os dados existentes do arquivo JSON
+    results = file_manager.load_results()
+
     print("=========== HEALTH DOMAIN ==========\n")
-    # gc.collect()
+    
+    health_domain = Domain(name="Health")
+    health_stat = Statistics(qtd_data=qtd)
+    
+    
     dados = medir_performance(process_data, webid, sensorType_health, qtd)
     print("\n")
     print("**** PREPROCESS TIME ****")
     print(f"Tempo de execução: {dados['tempo_execucao']:.8f} segundos")
     print(f"Uso de memória: {dados['uso_memoria_MB']:.8f} MB")
     print(f"Uso médio de CPU: {dados['uso_cpu_percent']:.8f}%")     
-
-    # X_scaled = process_data(webid, sensorType_health, qtd)  # Chama a função definida no consumer.py
     
+    health_stat.preprocess_time_s = dados['tempo_execucao']
+    health_stat.preprocess_memo_mb = dados['uso_memoria_MB']
+    health_stat.preprocess_cpu_perc = dados['uso_cpu_percent']
+
     # Envolve cálculo de paramêtros, execução do algoritmo e cálculo dos indices (silhouette, davies e calinski)
-    # gc.collect()
-    # dados2 = medir_performance(run_algorithms, dados['resultado'])
-    # print("\n")
-    # print("**** RUN ALGORITHMS TIME ****")
-    # print(f"Tempo de execução: {dados2['tempo_execucao']:.4f} segundos")
-    # print(f"Uso de memória: {dados2['uso_memoria_MB']:.2f} MB")
-    # print(f"Uso médio de CPU: {dados2['uso_cpu_percent']:.2f}%") 
-    # results = dados2['resultado']
-    results = run_algorithms(dados['resultado'])
+    results_all = run_algorithms(dados['resultado'])
+    
+    algo_km = Algorithms(name="Kmeans")
+    results_kmeans = results_all[0]
+    results_kmeans_metrics = results_kmeans ['resultado'][0]
+    algo_km.clusters = results_kmeans['resultado'][1]    
+    algo_km.silhouette_score = results_kmeans_metrics[0]
+    algo_km.davies_bouldin = results_kmeans_metrics[1]
+    algo_km.calisnky_harabasz = results_kmeans_metrics[2]
+    algo_km.time_s = results_kmeans ['tempo_execucao']
+    algo_km.memory_mb = results_kmeans['uso_memoria_MB']
+    algo_km.cpu_perc = results_kmeans ['uso_cpu_percent']
+    algo_km.clusters_count = results_kmeans['resultado'][2]
+    
+    health_stat.algorithms.append(algo_km)
+                
+    algo_dbs = Algorithms(name="DBSCAN")
+    results_dbscan = results_all[1]
+    results_dbscan_metrics = results_dbscan ['resultado'][0]
+    params_dbscan = results_dbscan ['resultado'][1]
+    best_params = results_dbscan ['resultado'][2]
+    algo_dbs.clusters = params_dbscan[0]
+    algo_dbs.silhouette_score = results_dbscan_metrics[0]
+    algo_dbs.davies_bouldin = results_dbscan_metrics[1]
+    algo_dbs.calisnky_harabasz = results_dbscan_metrics[2]
+    algo_dbs.time_s = results_dbscan ['tempo_execucao']
+    algo_dbs.memory_mb = results_dbscan['uso_memoria_MB']
+    algo_dbs.cpu_perc = results_dbscan ['uso_cpu_percent']
+    algo_dbs.outliers = params_dbscan[1]
+    algo_dbs.clusters_count = params_dbscan[2]
+    algo_dbs.eps = best_params[0]
+    algo_dbs.samples = best_params[1]
+
+        
+    health_stat.algorithms.append(algo_dbs)
+    
+    health_stat.run_time_s = algo_km.time_s + algo_dbs.time_s
+    health_stat.run_memo_mb = algo_km.memory_mb + algo_dbs.memory_mb
+    health_stat.run_cpu_perc = algo_km.cpu_perc + algo_dbs.cpu_perc
     
     # Usa os índices calculados anteriormente para gerar as métricas
-    # gc.collect()
-    dados3 = medir_performance(calculate_metrics, results[0], results[1])
+    dados3 = medir_performance(calculate_metrics, results_kmeans ['resultado'], results_dbscan ['resultado'])
     print("\n")
     print("**** CALCULATE METRICS TIME ****")
     print(f"Tempo de execução: {dados3['tempo_execucao']:.8f} segundos")
@@ -238,7 +285,10 @@ if __name__ == "__main__":
     print(f"Uso médio de CPU: {dados3['uso_cpu_percent']:.8f}%") 
     metrics = dados3['resultado']
     
-    # gc.collect()
+    health_stat.metrics_time_s = dados3['tempo_execucao']
+    health_stat.metrics_memo_mb = dados3['uso_memoria_MB']
+    health_stat.metrics_cpu_perc = dados3['uso_cpu_percent']
+
     dados4 = medir_performance(save_metrics, metrics[0], metrics[1], "Health")
     print("\n")
     print("**** SAVE TIME ****")
@@ -246,10 +296,36 @@ if __name__ == "__main__":
     print(f"Uso de memória: {dados4['uso_memoria_MB']:.8f} MB")
     print(f"Uso médio de CPU: {dados4['uso_cpu_percent']:.8f}%") 
     
+    health_stat.save_time_s = dados4['tempo_execucao']
+    health_stat.save_memo_mb = dados4['uso_memoria_MB']
+    health_stat.save_cpu_perc = dados4['uso_cpu_percent']
+    
+    health_stat.total_time_s = health_stat.preprocess_time_s + health_stat.run_time_s + health_stat.metrics_time_s + health_stat.save_time_s
+    health_stat.total_memo_mb = health_stat.preprocess_memo_mb + health_stat.run_memo_mb + health_stat.metrics_memo_mb + health_stat.save_memo_mb
+    health_stat.total_cpu_perc = health_stat.preprocess_cpu_perc + health_stat.run_cpu_perc + health_stat.metrics_cpu_perc + health_stat.save_cpu_perc
+    
+    # Verificar se o domínio já existe
+    domain = next((d for d in results.domains if d.name == health_domain.name), None)
+    
+    if not domain:
+        # Se o domínio não existir, criar e adicionar
+        domain = Domain(name="Health", statistics=[health_stat])
+        results.domains.append(domain)
+    else:
+        # Verificar se a estatística já existe pelo qtd_data
+        stat = next((s for s in domain.statistics if s.qtd_data == health_stat.qtd_data), None)
+        
+        if stat:
+            # Atualizar estatística existente
+            stat.__dict__.update(health_stat.__dict__)
+        else:
+            # Adicionar nova estatística
+            domain.statistics.append(health_stat)
+               
     print("=========== ENVIRONMENT DOMAIN ==========\n")
-    # X_scaled = process_data(webid, sensorType_env, qtd)
-    # calculate_metrics (X_scaled, "Environment")
-    # gc.collect()
+    env_domain = Domain(name="Environment")
+    env_stat = Statistics(qtd_data=qtd)
+    
     dados = medir_performance(process_data, webid, sensorType_env, qtd)
     print("\n")
     print("**** PREPROCESS TIME ****")
@@ -257,22 +333,52 @@ if __name__ == "__main__":
     print(f"Uso de memória: {dados['uso_memoria_MB']:.8f} MB")
     print(f"Uso médio de CPU: {dados['uso_cpu_percent']:.8f}%")     
 
-    # X_scaled = process_data(webid, sensorType_health, qtd)  # Chama a função definida no consumer.py
+    env_stat.preprocess_time_s = dados['tempo_execucao']
+    env_stat.preprocess_memo_mb = dados['uso_memoria_MB']
+    env_stat.preprocess_cpu_perc = dados['uso_cpu_percent']
     
     # Envolve cálculo de paramêtros, execução do algoritmo e cálculo dos indices (silhouette, davies e calinski)
-    # gc.collect()
-    # dados2 = medir_performance(run_algorithms, dados['resultado'])
-    # print("\n")
-    # print("**** RUN ALGORITHMS TIME ****")
-    # print(f"Tempo de execução: {dados2['tempo_execucao']:.4f} segundos")
-    # print(f"Uso de memória: {dados2['uso_memoria_MB']:.2f} MB")
-    # print(f"Uso médio de CPU: {dados2['uso_cpu_percent']:.2f}%") 
-    # results = dados2['resultado']
-    results = run_algorithms(dados['resultado'])
+    results_all = run_algorithms(dados['resultado'])
+    
+    algo_km = Algorithms(name="Kmeans")
+    results_kmeans = results_all[0]
+    results_kmeans_metrics = results_kmeans ['resultado'][0]
+    algo_km.clusters = results_kmeans['resultado'][1]    
+    algo_km.silhouette_score = results_kmeans_metrics[0]
+    algo_km.davies_bouldin = results_kmeans_metrics[1]
+    algo_km.calisnky_harabasz = results_kmeans_metrics[2]
+    algo_km.time_s = results_kmeans ['tempo_execucao']
+    algo_km.memory_mb = results_kmeans['uso_memoria_MB']
+    algo_km.cpu_perc = results_kmeans ['uso_cpu_percent']
+    algo_km.clusters_count = results_kmeans['resultado'][2]
+    
+    env_stat.algorithms.append(algo_km)
+                
+    algo_dbs = Algorithms(name="DBSCAN")
+    results_dbscan = results_all[1]
+    results_dbscan_metrics = results_dbscan ['resultado'][0]
+    params_dbscan = results_dbscan ['resultado'][1]
+    best_params = results_dbscan ['resultado'][2]
+    algo_dbs.clusters = params_dbscan[0]
+    algo_dbs.silhouette_score = results_dbscan_metrics[0]
+    algo_dbs.davies_bouldin = results_dbscan_metrics[1]
+    algo_dbs.calisnky_harabasz = results_dbscan_metrics[2]
+    algo_dbs.time_s = results_dbscan ['tempo_execucao']
+    algo_dbs.memory_mb = results_dbscan['uso_memoria_MB']
+    algo_dbs.cpu_perc = results_dbscan ['uso_cpu_percent']
+    algo_dbs.outliers = params_dbscan[1]
+    algo_dbs.clusters_count = params_dbscan[2]
+    algo_dbs.eps = best_params[0]
+    algo_dbs.samples = best_params[1]
+
+    env_stat.algorithms.append(algo_dbs)
+    
+    env_stat.run_time_s = algo_km.time_s + algo_dbs.time_s
+    env_stat.run_memo_mb = algo_km.memory_mb + algo_dbs.memory_mb
+    env_stat.run_cpu_perc = algo_km.cpu_perc + algo_dbs.cpu_perc
     
     # Usa os índices calculados anteriormente para gerar as métricas
-    # gc.collect()
-    dados3 = medir_performance(calculate_metrics, results[0], results[1])
+    dados3 = medir_performance(calculate_metrics, results_kmeans ['resultado'], results_dbscan ['resultado'])
     print("\n")
     print("**** CALCULATE METRICS TIME ****")
     print(f"Tempo de execução: {dados3['tempo_execucao']:.8f} segundos")
@@ -280,7 +386,10 @@ if __name__ == "__main__":
     print(f"Uso médio de CPU: {dados3['uso_cpu_percent']:.8f}%") 
     metrics = dados3['resultado']
     
-    # gc.collect()
+    env_stat.metrics_time_s = dados3['tempo_execucao']
+    env_stat.metrics_memo_mb = dados3['uso_memoria_MB']
+    env_stat.metrics_cpu_perc = dados3['uso_cpu_percent']
+    
     dados4 = medir_performance(save_metrics, metrics[0], metrics[1], "Environment")
     print("\n")
     print("**** SAVE TIME ****")
@@ -288,12 +397,37 @@ if __name__ == "__main__":
     print(f"Uso de memória: {dados4['uso_memoria_MB']:.8f} MB")
     print(f"Uso médio de CPU: {dados4['uso_cpu_percent']:.8f}%")
     
+    env_stat.save_time_s = dados4['tempo_execucao']
+    env_stat.save_memo_mb = dados4['uso_memoria_MB']
+    env_stat.save_cpu_perc = dados4['uso_cpu_percent']
     
+    env_stat.total_time_s = env_stat.preprocess_time_s + env_stat.run_time_s + env_stat.metrics_time_s + env_stat.save_time_s
+    env_stat.total_memo_mb = env_stat.preprocess_memo_mb + env_stat.run_memo_mb + env_stat.metrics_memo_mb + env_stat.save_memo_mb
+    env_stat.total_cpu_perc = env_stat.preprocess_cpu_perc + env_stat.run_cpu_perc + env_stat.metrics_cpu_perc + env_stat.save_cpu_perc
+
+ 
+    # Verificar se o domínio já existe
+    domain = next((d for d in results.domains if d.name == env_domain.name), None)
+    
+    if not domain:
+        # Se o domínio não existir, criar e adicionar
+        domain = Domain(name="Environment", statistics=[env_stat])
+        results.domains.append(domain)
+    else:
+        # Verificar se a estatística já existe pelo qtd_data
+        stat = next((s for s in domain.statistics if s.qtd_data == env_stat.qtd_data), None)
+        
+        if stat:
+            # Atualizar estatística existente
+            stat.__dict__.update(env_stat.__dict__)
+        else:
+            # Adicionar nova estatística
+            domain.statistics.append(env_stat)
  
     print("=========== ENVIRONMENT_HEALTH DOMAIN ==========\n")   
-    # X_scaled = process_data(webid, sensorType_all, qtd)
-    # calculate_metrics (X_scaled, "Environment_Health")
-    # gc.collect()
+    env_health_domain = Domain(name="Environment_Health")
+    env_health_stat = Statistics(qtd_data=qtd)
+    
     dados = medir_performance(process_data, webid, sensorType_all, qtd)
     print("\n")
     print("**** PREPROCESS TIME ****")
@@ -301,28 +435,63 @@ if __name__ == "__main__":
     print(f"Uso de memória: {dados['uso_memoria_MB']:.8f} MB")
     print(f"Uso médio de CPU: {dados['uso_cpu_percent']:.8f}%")     
 
-    # X_scaled = process_data(webid, sensorType_health, qtd)  # Chama a função definida no consumer.py
-    
+    env_health_stat.preprocess_time_s = dados['tempo_execucao']
+    env_health_stat.preprocess_memo_mb = dados['uso_memoria_MB']
+    env_health_stat.preprocess_cpu_perc = dados['uso_cpu_percent']
+           
     # Envolve cálculo de paramêtros, execução do algoritmo e cálculo dos indices (silhouette, davies e calinski)
-    # gc.collect()
-    # dados2 = medir_performance(run_algorithms, dados['resultado'])
-    # print("\n")
-    # print("**** RUN ALGORITHMS TIME ****")
-    # print(f"Tempo de execução: {dados2['tempo_execucao']:.4f} segundos")
-    # print(f"Uso de memória: {dados2['uso_memoria_MB']:.2f} MB")
-    # print(f"Uso médio de CPU: {dados2['uso_cpu_percent']:.2f}%") 
-    # results = dados2['resultado']
-    results = run_algorithms(dados['resultado'])
+    results_all = run_algorithms(dados['resultado'])
+    
+    algo_km = Algorithms(name="Kmeans")
+    results_kmeans = results_all[0]
+    results_kmeans_metrics = results_kmeans ['resultado'][0]
+    algo_km.clusters = results_kmeans['resultado'][1]    
+    algo_km.silhouette_score = results_kmeans_metrics[0]
+    algo_km.davies_bouldin = results_kmeans_metrics[1]
+    algo_km.calisnky_harabasz = results_kmeans_metrics[2]
+    algo_km.time_s = results_kmeans ['tempo_execucao']
+    algo_km.memory_mb = results_kmeans['uso_memoria_MB']
+    algo_km.cpu_perc = results_kmeans ['uso_cpu_percent']
+    algo_km.clusters_count = results_kmeans['resultado'][2]
+    
+    env_health_stat.algorithms.append(algo_km)
+                
+    algo_dbs = Algorithms(name="DBSCAN")
+    results_dbscan = results_all[1]
+    results_dbscan_metrics = results_dbscan ['resultado'][0]
+    params_dbscan = results_dbscan ['resultado'][1]
+    best_params = results_dbscan ['resultado'][2]
+    algo_dbs.clusters = params_dbscan[0]
+    algo_dbs.silhouette_score = results_dbscan_metrics[0]
+    algo_dbs.davies_bouldin = results_dbscan_metrics[1]
+    algo_dbs.calisnky_harabasz = results_dbscan_metrics[2]
+    algo_dbs.time_s = results_dbscan ['tempo_execucao']
+    algo_dbs.memory_mb = results_dbscan['uso_memoria_MB']
+    algo_dbs.cpu_perc = results_dbscan ['uso_cpu_percent']
+    algo_dbs.outliers = params_dbscan[1]
+    algo_dbs.clusters_count = params_dbscan[2]
+    algo_dbs.eps = best_params[0]
+    algo_dbs.samples = best_params[1]
+
+        
+    env_health_stat.algorithms.append(algo_dbs)
+    
+    env_health_stat.run_time_s = algo_km.time_s + algo_dbs.time_s
+    env_health_stat.run_memo_mb = algo_km.memory_mb + algo_dbs.memory_mb
+    env_health_stat.run_cpu_perc = algo_km.cpu_perc + algo_dbs.cpu_perc
     
     # Usa os índices calculados anteriormente para gerar as métricas
-    # gc.collect()
-    dados3 = medir_performance(calculate_metrics, results[0], results[1])
+    dados3 = medir_performance(calculate_metrics, results_kmeans ['resultado'], results_dbscan ['resultado'])
     print("\n")
     print("**** CALCULATE METRICS TIME ****")
     print(f"Tempo de execução: {dados3['tempo_execucao']:.8f} segundos")
     print(f"Uso de memória: {dados3['uso_memoria_MB']:.8f} MB")
     print(f"Uso médio de CPU: {dados3['uso_cpu_percent']:.8f}%") 
-    metrics = dados3['resultado']
+    metrics = dados3['resultado']    
+        
+    env_health_stat.metrics_time_s = dados3['tempo_execucao']
+    env_health_stat.metrics_memo_mb = dados3['uso_memoria_MB']
+    env_health_stat.metrics_cpu_perc = dados3['uso_cpu_percent']
     
     # gc.collect()
     dados4 = medir_performance(save_metrics, metrics[0], metrics[1], "Environment_Health")
@@ -332,4 +501,38 @@ if __name__ == "__main__":
     print(f"Uso de memória: {dados4['uso_memoria_MB']:.8f} MB")
     print(f"Uso médio de CPU: {dados4['uso_cpu_percent']:.8f}%")
     
-    print("Execução concluída.")
+    env_health_stat.save_time_s = dados4['tempo_execucao']
+    env_health_stat.save_memo_mb = dados4['uso_memoria_MB']
+    env_health_stat.save_cpu_perc = dados4['uso_cpu_percent']
+    
+    env_health_stat.total_time_s = env_health_stat.preprocess_time_s + env_health_stat.run_time_s + env_health_stat.metrics_time_s + env_health_stat.save_time_s
+    env_health_stat.total_memo_mb = env_health_stat.preprocess_memo_mb + env_health_stat.run_memo_mb + env_health_stat.metrics_memo_mb + env_health_stat.save_memo_mb
+    env_health_stat.total_cpu_perc = env_health_stat.preprocess_cpu_perc + env_health_stat.run_cpu_perc + env_health_stat.metrics_cpu_perc + env_health_stat.save_cpu_perc
+    
+    # Verificar se o domínio já existe
+    domain = next((d for d in results.domains if d.name == env_health_domain.name), None)
+    
+    if not domain:
+        # Se o domínio não existir, criar e adicionar
+        domain = Domain(name="Environment_Health", statistics=[env_health_stat])
+        results.domains.append(domain)
+    else:
+        # Verificar se a estatística já existe pelo qtd_data
+        stat = next((s for s in domain.statistics if s.qtd_data == env_health_stat.qtd_data), None)
+        
+        if stat:
+            # Atualizar estatística existente
+            stat.__dict__.update(env_health_stat.__dict__)
+        else:
+            # Adicionar nova estatística
+            domain.statistics.append(env_health_stat)
+    
+    
+    print("\nSalvando em JSON.")
+    print ("========================================\n")
+    
+    file_manager.save_results(results)
+    
+    print("\nExecução concluída.")
+    print ("========================================\n")
+    

@@ -56,6 +56,8 @@ def run (X, eps, min_samples):
         silhouette = silhouette_score(X, labels)
         davies_bouldin = davies_bouldin_score(X, labels)
         calinski_harabasz = calinski_harabasz_score(X, labels)
-        return (silhouette, davies_bouldin, calinski_harabasz, n_clusters, n_outliers,cluster_counts)
+        results = (silhouette, davies_bouldin, calinski_harabasz)
+        params = (n_clusters, n_outliers,cluster_counts)
+        return (results, params)
     else:     
         return None
