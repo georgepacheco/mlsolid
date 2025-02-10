@@ -39,8 +39,15 @@ def plot_pca(X_scaled, labels, file_name, title):
     # Plotar cada cluster separadamente para permitir a legenda
     for label, color in zip(unique_labels, colors):
         mask = (labels == label)  # Filtrar os pontos do cluster atual
+        
+        if label == -1:  # Outliers identificados pelo DBSCAN
+            color = "red"  # Define cor vermelha para os outliers
+            label_name = "Outliers"
+        else:
+            label_name = f"Cluster {label}"
+        
         plt.scatter(reduced_data[mask, 0], reduced_data[mask, 1], 
-                    color=color, label=f"Cluster {label}", alpha=0.7)
+                    color=color, label=label_name, alpha=0.7)
         
     plt.title(title)
     plt.legend()
