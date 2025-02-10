@@ -10,7 +10,6 @@ from Performance import medir_performance
 from dataclasses import asdict
 from Model import FileManager, Results, Domain, Statistics, Algorithms
 
-
 # Adiciona o diretório raiz do projeto ao sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
@@ -99,7 +98,7 @@ def calculate_metrics(result_kmeans, result_dbscan):
         print("\n")
         print("***** Results Kmeans *****")
         print("Número de Clusters K-Means: ", result_kmeans[1])
-        print('Objetos por cluster: ', result_kmeans[2])
+        print('Objetos por cluster: ', result_kmeans[2][2])
         print("Melhores Resultados Kmeans (Silhouete, Davies_Bouldin, Calinski_Harabasz):", result_kmeans)  
         print("Melhores Resultados Kmeans Normalizados (Silhouete, Davies_Bouldin, Calinski_Harabasz):", silhouette_norm_km, davies_norm_km)  
                    
@@ -136,8 +135,11 @@ def group_kmeans(X_scaled):
     # Run kmeans
     results, params = kmeans.run_kmeans(X_scaled, optimal_k)
     
-    # retorna indices, n_clusters, clusters_count
-    return (results, optimal_k, params[2])
+    # retorna indices, n_clusters, params = (kmeans.labels_, kmeans.cluster_centers_, cluster_counts)
+    return (results, optimal_k, params[2], params[0], params[1])
+    
+    # # retorna indices, n_clusters, params = (kmeans.labels_, kmeans.cluster_centers_, cluster_counts)
+    # return (results, optimal_k, params[2])
     
 def group_dbscan(X_scaled):
      
@@ -210,10 +212,10 @@ if __name__ == "__main__":
     sensorType_env = ["AirThermometer", "HumiditySensor"]
    # sensorType_all = ["AirThermometer", "HumiditySensor","Glucometer", "HeartBeatSensor", "BloodPressureSensor", "BodyThermometer", "SkinConductanceSensor", "Accelerometer", "PulseOxymeter"]
     sensorType_all = ["AirThermometer", "HumiditySensor","Glucometer", "HeartBeatSensor", "SystolicBloodPressure", "DiastolicBloodPressure", "BodyThermometer", "SkinConductanceSensor", "Accelerometer", "PulseOxymeter"]
-    qtd = "30"
+    qtd = "7"
     
     # Criando a instância do FileManager
-    file_manager = FileManager("statistic_results.json")
+    file_manager = FileManager("results/statistic_results.json")
 
     # Carregando os dados existentes do arquivo JSON
     results = file_manager.load_results()
@@ -241,6 +243,8 @@ if __name__ == "__main__":
     algo_km = Algorithms(name="Kmeans")
     results_kmeans = results_all[0]
     results_kmeans_metrics = results_kmeans ['resultado'][0]
+    kmeans_labels = results_kmeans ['resultado'][3]
+    # params_kmeans = results_kmeans ['resultado'][2]
     algo_km.clusters = results_kmeans['resultado'][1]    
     algo_km.silhouette_score = results_kmeans_metrics[0]
     algo_km.davies_bouldin = results_kmeans_metrics[1]
@@ -249,6 +253,7 @@ if __name__ == "__main__":
     algo_km.memory_mb = results_kmeans['uso_memoria_MB']
     algo_km.cpu_perc = results_kmeans ['uso_cpu_percent']
     algo_km.clusters_count = results_kmeans['resultado'][2]
+    # algo_km.clusters_count = params_kmeans[2]
     
     health_stat.algorithms.append(algo_km)
                 
@@ -321,6 +326,12 @@ if __name__ == "__main__":
         else:
             # Adicionar nova estatística
             domain.statistics.append(health_stat)
+    
+    title = "Health Domain with K-Means - "+qtd+" days"        
+    shared.plot_pca(X_scaled=dados['resultado'], labels=kmeans_labels, file_name="results/"+qtd+"/"+qtd+"_km_pca_health.png", title=title)
+    title = "Health Domain with DBSCAN - "+qtd+" days"        
+    shared.plot_pca(X_scaled=dados['resultado'], labels=params_dbscan[3], file_name="results/"+qtd+"/"+qtd+"_dbscan_pca_health.png", title=title)
+               
                
     print("=========== ENVIRONMENT DOMAIN ==========\n")
     env_domain = Domain(name="Environment")
@@ -343,6 +354,8 @@ if __name__ == "__main__":
     algo_km = Algorithms(name="Kmeans")
     results_kmeans = results_all[0]
     results_kmeans_metrics = results_kmeans ['resultado'][0]
+    kmeans_labels = results_kmeans ['resultado'][3]
+    kmeans_centroids = results_kmeans ['resultado'][4]
     algo_km.clusters = results_kmeans['resultado'][1]    
     algo_km.silhouette_score = results_kmeans_metrics[0]
     algo_km.davies_bouldin = results_kmeans_metrics[1]
@@ -424,6 +437,12 @@ if __name__ == "__main__":
             # Adicionar nova estatística
             domain.statistics.append(env_stat)
  
+    title = "Environment Domain with K-Means - "+qtd+" days"        
+    shared.plot_graph_kmeans(X=dados['resultado'], labels=kmeans_labels, centroids=kmeans_centroids, file_name="results/"+qtd+"/"+qtd+"_kmeans_graph_environment.png", title=title)
+    title = "Environment Domain with DBSCAN - "+qtd+" days"        
+    shared.plot_dbscan_clusters(X=dados['resultado'], labels=params_dbscan[3], file_name="results/"+qtd+"/"+qtd+"_dbscan_graph_environment.png", title=title)
+ 
+ 
     print("=========== ENVIRONMENT_HEALTH DOMAIN ==========\n")   
     env_health_domain = Domain(name="Environment_Health")
     env_health_stat = Statistics(qtd_data=qtd)
@@ -446,6 +465,7 @@ if __name__ == "__main__":
     results_kmeans = results_all[0]
     results_kmeans_metrics = results_kmeans ['resultado'][0]
     algo_km.clusters = results_kmeans['resultado'][1]    
+    kmeans_labels = results_kmeans ['resultado'][3]
     algo_km.silhouette_score = results_kmeans_metrics[0]
     algo_km.davies_bouldin = results_kmeans_metrics[1]
     algo_km.calisnky_harabasz = results_kmeans_metrics[2]
@@ -527,6 +547,10 @@ if __name__ == "__main__":
             # Adicionar nova estatística
             domain.statistics.append(env_health_stat)
     
+    title = "Environment and Health Domains with K-Means - "+qtd+" days"        
+    shared.plot_pca(X_scaled=dados['resultado'], labels=kmeans_labels, file_name="results/"+qtd+"/"+qtd+"_km_pca_environment_health.png", title=title)
+    title = "Environment and Health Domains with DBSCAN - "+qtd+" days"        
+    shared.plot_pca(X_scaled=dados['resultado'], labels=params_dbscan[3], file_name="results/"+qtd+"/"+qtd+"_dbscan_pca_environment_health.png", title=title)
     
     print("\nSalvando em JSON.")
     print ("========================================\n")
