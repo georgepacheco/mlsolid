@@ -1,0 +1,25 @@
+{
+    "metrics": [
+      {
+        "datetime": "2025-01-101T12:00:00Z",
+        "results": [
+          {
+            "domain": "Environment",
+            "algorithm": "K-means",
+            "silhouette_score": 0.35
+          },
+          {
+            "domain": "Health",
+            "algorithm": "K-means",
+            "silhouette_score": 0.25
+          },
+          {
+            "domain": "Environment_Health",
+            "algorithm": "K-means",
+            "silhouette_score": 0.42
+          }
+        ]
+      }
+    ]
+  }
+  

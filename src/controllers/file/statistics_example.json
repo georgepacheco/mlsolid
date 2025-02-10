@@ -1,0 +1,136 @@
+{
+    "statistics": [
+      {        
+        "domains": [
+          {
+            "name": "",
+            "qtd_data": "1",
+            "algorithms": [
+                {
+                    "algorithm": "K-means",
+                    "clusters": "",
+                    "silhouette_score": "",
+                    "davies_bouldin": "",
+                    "calisnky_harabasz": "",
+                    "time_s":"",
+                    "memory_mb": "",
+                    "cpu_perc":"",
+                    "clusters_count":""
+                },
+                {
+                    "algorithm": "DBSCAN",                    
+                    "clusters": "",
+                    "eps": "",
+                    "samples":"",
+                    "outliers": "",
+                    "silhouette_score": "",
+                    "davies_bouldin": "",
+                    "calisnky_harabasz": "",
+                    "time_s":"",
+                    "memory_mb": "",
+                    "cpu_perc":"",
+                    "clusters_count":""
+                }
+            ],
+            "preprocess_time_s":"",
+            "preprocess_memo_mb":"",
+            "preprocess_cpu_perc":"",
+            "metrics_time_s":"",
+            "metrics_memo_mb":"",
+            "metrics_cpu_perc":"",
+            "save_time_s":"",
+            "save_memo_mb":"",
+            "save_cpu_perc":"",
+            "total_time_s":"",
+            "total_memo_mb":"",
+            "total_cpu_perc":""
+          },
+          {
+            "qtd_data": "7",
+            "algorithms": [
+                {
+                    "algorithm": "K-means",
+                    "clusters": "",
+                    "silhouette_score": "",
+                    "davies_bouldin": "",
+                    "calisnky_harabasz": "",
+                    "time_s":"",
+                    "memory_mb": "",
+                    "cpu_perc":"",
+                    "clusters_count":""
+                },
+                {
+                    "algorithm": "DBSCAN",                    
+                    "clusters": "",
+                    "eps": "",
+                    "samples":"",
+                    "outliers": "",
+                    "silhouette_score": "",
+                    "davies_bouldin": "",
+                    "calisnky_harabasz": "",
+                    "time_s":"",
+                    "memory_mb": "",
+                    "cpu_perc":"",
+                    "clusters_count":""
+                }
+            ],
+            "preprocess_time_s":"",
+            "preprocess_memo_mb":"",
+            "preprocess_cpu_perc":"",
+            "metrics_time_s":"",
+            "metrics_memo_mb":"",
+            "metrics_cpu_perc":"",
+            "save_time_s":"",
+            "save_memo_mb":"",
+            "save_cpu_perc":"",
+            "total_time_s":"",
+            "total_memo_mb":"",
+            "total_cpu_perc":""
+          },
+          {
+           "qtd_data": "30",
+            "algorithms": [
+                {
+                    "algorithm": "K-means",
+                    "clusters": "",
+                    "silhouette_score": "",
+                    "davies_bouldin": "",
+                    "calisnky_harabasz": "",
+                    "time_s":"",
+                    "memory_mb": "",
+                    "cpu_perc":"",
+                    "clusters_count":""
+                },
+                {
+                    "algorithm": "DBSCAN",                    
+                    "clusters": "",
+                    "eps": "",
+                    "samples":"",
+                    "outliers": "",
+                    "silhouette_score": "",
+                    "davies_bouldin": "",
+                    "calisnky_harabasz": "",
+                    "time_s":"",
+                    "memory_mb": "",
+                    "cpu_perc":"",
+                    "clusters_count":""
+                }
+            ],
+            "preprocess_time_s":"",
+            "preprocess_memo_mb":"",
+            "preprocess_cpu_perc":"",
+            "metrics_time_s":"",
+            "metrics_memo_mb":"",
+            "metrics_cpu_perc":"",
+            "save_time_s":"",
+            "save_memo_mb":"",
+            "save_cpu_perc":"",
+            "total_time_s":"",
+            "total_memo_mb":"",
+            "total_cpu_perc":""
+          }
+        ]
+      }
+    ]
+  }
+  
