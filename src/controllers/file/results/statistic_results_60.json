@@ -172,61 +172,6 @@
                             "outliers": null
                         }
                     ]
-                },
-                {
-                    "qtd_data": "90",
-                    "preprocess_time_s": 29.755946159362793,
-                    "preprocess_memo_mb": 0.7783193588256836,
-                    "preprocess_cpu_perc": 0.2016403702260393,
-                    "run_time_s": 51.7024827003479,
-                    "run_memo_mb": 0.540008544921875,
-                    "run_cpu_perc": 109.65899908147551,
-                    "metrics_time_s": 0.006465435028076172,
-                    "metrics_memo_mb": 0.02167034149169922,
-                    "metrics_cpu_perc": 77.33431669002661,
-                    "save_time_s": 0.8759205341339111,
-                    "save_memo_mb": 0.00324249267578125,
-                    "save_cpu_perc": 0.2854140190322043,
-                    "total_time_s": 82.34081482887268,
-                    "total_memo_mb": 1.343240737915039,
-                    "total_cpu_perc": 187.48037016076037,
-                    "algorithms": [
-                        {
-                            "name": "Kmeans",
-                            "clusters": 6,
-                            "silhouette_score": 0.1373342034024488,
-                            "davies_bouldin": 2.098472921435412,
-                            "calisnky_harabasz": 453.93423214402225,
-                            "time_s": 1.428236961364746,
-                            "memory_mb": 0.29616832733154297,
-                            "cpu_perc": 77.01803200422005,
-                            "clusters_count": {
-                                "0": 806,
-                                "1": 1019,
-                                "2": 748,
-                                "3": 340,
-                                "4": 786,
-                                "5": 621
-                            },
-                            "eps": null,
-                            "samples": null,
-                            "outliers": null
-                        },
-                        {
-                            "name": "DBSCAN",
-                            "clusters": null,
-                            "silhouette_score": null,
-                            "davies_bouldin": null,
-                            "calisnky_harabasz": null,
-                            "time_s": null,
-                            "memory_mb": null,
-                            "cpu_perc": null,
-                            "clusters_count": null,
-                            "eps": null,
-                            "samples": null,
-                            "outliers": null
-                        }
-                    ]
                 }
             ]
         },
@@ -377,60 +322,6 @@
                                 "3": 3011,
                                 "4": 870,
                                 "5": 1668
-                            },
-                            "eps": null,
-                            "samples": null,
-                            "outliers": null
-                        },
-                        {
-                            "name": "DBSCAN",
-                            "clusters": null,
-                            "silhouette_score": null,
-                            "davies_bouldin": null,
-                            "calisnky_harabasz": null,
-                            "time_s": null,
-                            "memory_mb": null,
-                            "cpu_perc": null,
-                            "clusters_count": null,
-                            "eps": null,
-                            "samples": null,
-                            "outliers": null
-                        }
-                    ]
-                },
-                {
-                    "qtd_data": "90",
-                    "preprocess_time_s": 29.610913038253784,
-                    "preprocess_memo_mb": 0.29462528228759766,
-                    "preprocess_cpu_perc": 0.17729949742574827,
-                    "run_time_s": 0,
-                    "run_memo_mb": 0,
-                    "run_cpu_perc": 0,
-                    "metrics_time_s": 0.0012660026550292969,
-                    "metrics_memo_mb": 0.005934715270996094,
-                    "metrics_cpu_perc": 0.0,
-                    "save_time_s": 0.913055419921875,
-                    "save_memo_mb": 0.00168609619140625,
-                    "save_cpu_perc": 1.3690297135598672,
-                    "total_time_s": 30.52523446083069,
-                    "total_memo_mb": 0.30224609375,
-                    "total_cpu_perc": 1.5463292109856155,
-                    "algorithms": [
-                        {
-                            "name": "Kmeans",
-                            "clusters": 5,
-                            "silhouette_score": 0.32647884681754313,
-                            "davies_bouldin": 0.9572011709276878,
-                            "calisnky_harabasz": 10243.157297067395,
-                            "time_s": 6.2985520362854,
-                            "memory_mb": 0.08103275299072266,
-                            "cpu_perc": 48.62228623907858,
-                            "clusters_count": {
-                                "0": 4143,
-                                "1": 2010,
-                                "2": 2263,
-                                "3": 3178,
-                                "4": 5686
                             },
                             "eps": null,
                             "samples": null,
@@ -632,69 +523,6 @@
                             "clusters_count": {
                                 "-1": 4,
                                 "0": 11516
-                            },
-                            "eps": 5.0,
-                            "samples": 3,
-                            "outliers": 4
-                        }
-                    ]
-                },
-                {
-                    "qtd_data": "90",
-                    "preprocess_time_s": 56.985464572906494,
-                    "preprocess_memo_mb": 1.3526792526245117,
-                    "preprocess_cpu_perc": 0.3070958556038582,
-                    "run_time_s": 884.8552575111389,
-                    "run_memo_mb": 0.7921352386474609,
-                    "run_cpu_perc": 87.29105293135989,
-                    "metrics_time_s": 0.007430315017700195,
-                    "metrics_memo_mb": 0.018708229064941406,
-                    "metrics_cpu_perc": 0.0,
-                    "save_time_s": 1.157280445098877,
-                    "save_memo_mb": 0.00168609619140625,
-                    "save_cpu_perc": 0.4320473936262059,
-                    "total_time_s": 943.005432844162,
-                    "total_memo_mb": 2.1652088165283203,
-                    "total_cpu_perc": 88.03019618058995,
-                    "algorithms": [
-                        {
-                            "name": "Kmeans",
-                            "clusters": 11,
-                            "silhouette_score": 0.21240921841461433,
-                            "davies_bouldin": 1.825024513677243,
-                            "calisnky_harabasz": 1211.5570333352246,
-                            "time_s": 7.1828932762146,
-                            "memory_mb": 0.08129215240478516,
-                            "cpu_perc": 56.418769486933975,
-                            "clusters_count": {
-                                "0": 4149,
-                                "1": 2648,
-                                "2": 622,
-                                "3": 1989,
-                                "4": 561,
-                                "5": 620,
-                                "6": 512,
-                                "7": 340,
-                                "8": 745,
-                                "9": 4302,
-                                "10": 792
-                            },
-                            "eps": null,
-                            "samples": null,
-                            "outliers": null
-                        },
-                        {
-                            "name": "DBSCAN",
-                            "clusters": 1,
-                            "silhouette_score": 0.6865886217148843,
-                            "davies_bouldin": 1.4691077010112075,
-                            "calisnky_harabasz": 21.39278452373199,
-                            "time_s": 877.6723642349243,
-                            "memory_mb": 0.7108430862426758,
-                            "cpu_perc": 30.872283444425914,
-                            "clusters_count": {
-                                "-1": 4,
-                                "0": 17276
                             },
                             "eps": 5.0,
                             "samples": 3,

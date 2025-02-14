@@ -1,0 +1,193 @@
+{
+    "domains": [
+        {
+            "name": "Health",
+            "statistics": [
+                {
+                    "qtd_data": "7",
+                    "preprocess_time_s": 7.256861209869385,
+                    "preprocess_memo_mb": 0.5362348556518555,
+                    "preprocess_cpu_perc": 0.17225077948300732,
+                    "run_time_s": 1.596618413925171,
+                    "run_memo_mb": 0.4394197463989258,
+                    "run_cpu_perc": 139.86270774544616,
+                    "metrics_time_s": 0.0033388137817382812,
+                    "metrics_memo_mb": 0.03204631805419922,
+                    "metrics_cpu_perc": 0.0,
+                    "save_time_s": 0.9460291862487793,
+                    "save_memo_mb": 0.00324249267578125,
+                    "save_cpu_perc": 0.0,
+                    "total_time_s": 9.802847623825073,
+                    "total_memo_mb": 1.0109434127807617,
+                    "total_cpu_perc": 140.03495852492915,
+                    "algorithms": [
+                        {
+                            "name": "Kmeans",
+                            "clusters": 6,
+                            "silhouette_score": 0.1558194313192549,
+                            "davies_bouldin": 1.6310006018125633,
+                            "calisnky_harabasz": 47.99521295674157,
+                            "time_s": 0.3447139263153076,
+                            "memory_mb": 0.2885303497314453,
+                            "cpu_perc": 54.39292865368457,
+                            "clusters_count": {
+                                "0": 62,
+                                "1": 65,
+                                "2": 58,
+                                "3": 62,
+                                "4": 54,
+                                "5": 35
+                            },
+                            "eps": null,
+                            "samples": null,
+                            "outliers": null
+                        },
+                        {
+                            "name": "DBSCAN",
+                            "clusters": 2,
+                            "silhouette_score": 0.26976905276031005,
+                            "davies_bouldin": 1.5007555451992962,
+                            "calisnky_harabasz": 49.594810183036635,
+                            "time_s": 1.2519044876098633,
+                            "memory_mb": 0.15088939666748047,
+                            "cpu_perc": 85.4697790917616,
+                            "clusters_count": {
+                                "0": 301,
+                                "1": 35
+                            },
+                            "eps": 3.0,
+                            "samples": 3,
+                            "outliers": 0
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Environment",
+            "statistics": [
+                {
+                    "qtd_data": "7",
+                    "preprocess_time_s": 4.574125528335571,
+                    "preprocess_memo_mb": 0.051296234130859375,
+                    "preprocess_cpu_perc": 0.16396576686711622,
+                    "run_time_s": 3.6054739952087402,
+                    "run_memo_mb": 0.20493030548095703,
+                    "run_cpu_perc": 141.92866946149422,
+                    "metrics_time_s": 0.001984834671020508,
+                    "metrics_memo_mb": 0.009600639343261719,
+                    "metrics_cpu_perc": 0.0,
+                    "save_time_s": 1.0854804515838623,
+                    "save_memo_mb": 0.00168609619140625,
+                    "save_cpu_perc": 0.2303127611697043,
+                    "total_time_s": 9.267064809799194,
+                    "total_memo_mb": 0.2675132751464844,
+                    "total_cpu_perc": 142.32294798953103,
+                    "algorithms": [
+                        {
+                            "name": "Kmeans",
+                            "clusters": 4,
+                            "silhouette_score": 0.4983900894116008,
+                            "davies_bouldin": 0.7472912149001212,
+                            "calisnky_harabasz": 3038.265745394156,
+                            "time_s": 0.33238720893859863,
+                            "memory_mb": 0.018209457397460938,
+                            "cpu_perc": 72.95707941781735,
+                            "clusters_count": {
+                                "0": 267,
+                                "1": 387,
+                                "2": 358,
+                                "3": 332
+                            },
+                            "eps": null,
+                            "samples": null,
+                            "outliers": null
+                        },
+                        {
+                            "name": "DBSCAN",
+                            "clusters": 1,
+                            "silhouette_score": 0.38612978924685576,
+                            "davies_bouldin": 0.9376280036924922,
+                            "calisnky_harabasz": 5.565410040160625,
+                            "time_s": 3.2730867862701416,
+                            "memory_mb": 0.1867208480834961,
+                            "cpu_perc": 68.97159004367687,
+                            "clusters_count": {
+                                "-1": 2,
+                                "0": 1342
+                            },
+                            "eps": 1.0,
+                            "samples": 3,
+                            "outliers": 2
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Environment_Health",
+            "statistics": [
+                {
+                    "qtd_data": "7",
+                    "preprocess_time_s": 9.811113357543945,
+                    "preprocess_memo_mb": 0.1367053985595703,
+                    "preprocess_cpu_perc": 0.20385046295099274,
+                    "run_time_s": 9.94093370437622,
+                    "run_memo_mb": 0.0932455062866211,
+                    "run_cpu_perc": 167.22639011778494,
+                    "metrics_time_s": 0.0030596256256103516,
+                    "metrics_memo_mb": 0.014456748962402344,
+                    "metrics_cpu_perc": 0.0,
+                    "save_time_s": 1.1709849834442139,
+                    "save_memo_mb": 0.00168609619140625,
+                    "save_cpu_perc": 0.21349547904929247,
+                    "total_time_s": 20.92609167098999,
+                    "total_memo_mb": 0.24609375,
+                    "total_cpu_perc": 167.64373605978523,
+                    "algorithms": [
+                        {
+                            "name": "Kmeans",
+                            "clusters": 7,
+                            "silhouette_score": 0.3640505579171498,
+                            "davies_bouldin": 1.5336098789913915,
+                            "calisnky_harabasz": 188.93340560001693,
+                            "time_s": 0.7007145881652832,
+                            "memory_mb": 0.01642322540283203,
+                            "cpu_perc": 91.33533264602704,
+                            "clusters_count": {
+                                "0": 550,
+                                "1": 549,
+                                "2": 77,
+                                "3": 54,
+                                "4": 53,
+                                "5": 35,
+                                "6": 26
+                            },
+                            "eps": null,
+                            "samples": null,
+                            "outliers": null
+                        },
+                        {
+                            "name": "DBSCAN",
+                            "clusters": 2,
+                            "silhouette_score": 0.6003277633653757,
+                            "davies_bouldin": 2.4334517028188505,
+                            "calisnky_harabasz": 75.01302809435188,
+                            "time_s": 9.240219116210938,
+                            "memory_mb": 0.07682228088378906,
+                            "cpu_perc": 75.89105747175789,
+                            "clusters_count": {
+                                "-1": 26,
+                                "0": 1294,
+                                "1": 24
+                            },
+                            "eps": 4.5,
+                            "samples": 4,
+                            "outliers": 26
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

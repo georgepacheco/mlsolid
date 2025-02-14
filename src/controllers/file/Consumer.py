@@ -70,14 +70,16 @@ def run_algorithms(X_scaled):
         
         # ====================== AGRUPAMENTO COM DBSCAN ======================================
         result_dbscan = medir_performance(group_dbscan, X_scaled)
-        print("\n")
-        print("**** DBSCAN Execution ****")
-        print(f"Tempo de execução: {result_dbscan['tempo_execucao']:.8f} segundos")
-        print(f"Uso de memória: {result_dbscan['uso_memoria_MB']:.8f} MB")
-        print(f"Uso médio de CPU: {result_dbscan['uso_cpu_percent']:.8f}%")
+        if result_dbscan['resultado'] != None:
+            print("\n")
+            print("**** DBSCAN Execution ****")
+            print(f"Tempo de execução: {result_dbscan['tempo_execucao']:.8f} segundos")
+            print(f"Uso de memória: {result_dbscan['uso_memoria_MB']:.8f} MB")
+            print(f"Uso médio de CPU: {result_dbscan['uso_cpu_percent']:.8f}%")
         
-        # return (result_kmeans['resultado'],result_dbscan['resultado'])
-        return (result_kmeans,result_dbscan)
+            # return (result_kmeans['resultado'],result_dbscan['resultado'])
+            return (result_kmeans,result_dbscan)
+        return(result_kmeans, None)
         
         
 def calculate_metrics(result_kmeans, result_dbscan):
@@ -85,13 +87,16 @@ def calculate_metrics(result_kmeans, result_dbscan):
         # ====================== CALCÚLO MÉTRICAS ============================================
         
         silhouette_norm_km = normalizeSilhouette(result_kmeans[0][0])
-        silhouette_norm_dbs = normalizeSilhouette(result_dbscan[0][0])
         
-        davies_norm = normalizeDavies(result_kmeans[0][1], result_dbscan[0][1])
+        if result_dbscan[0][0] != None:
+            silhouette_norm_dbs = normalizeSilhouette(result_dbscan[0][0])
+        
+        
+        # davies_norm = normalizeDavies(result_kmeans[0][1], result_dbscan[0][1])
         # calinski_norm
         
-        davies_norm_km = davies_norm[0]
-        davies_norm_dbs = davies_norm[1]
+        # davies_norm_km = davies_norm[0]
+        # davies_norm_dbs = davies_norm[1]
         # calinski_norm_km = normalize_calinski(result_kmeans[0][2])        
         # calinski_norm_dbs = normalize_calinski(result_dbscan[0][2])
         
@@ -100,7 +105,7 @@ def calculate_metrics(result_kmeans, result_dbscan):
         print("Número de Clusters K-Means: ", result_kmeans[1])
         print('Objetos por cluster: ', result_kmeans[2][2])
         print("Melhores Resultados Kmeans (Silhouete, Davies_Bouldin, Calinski_Harabasz):", result_kmeans)  
-        print("Melhores Resultados Kmeans Normalizados (Silhouete, Davies_Bouldin, Calinski_Harabasz):", silhouette_norm_km, davies_norm_km)  
+        print("Melhores Resultados Kmeans Normalizados (Silhouete, Davies_Bouldin, Calinski_Harabasz):", silhouette_norm_km)  
                    
         print("\n")        
         print("***** Results DBSCAN *****")
@@ -109,7 +114,7 @@ def calculate_metrics(result_kmeans, result_dbscan):
         print("Número de Clusters DBSCAN", result_dbscan[1][0])
         print("Melhores parâmetros (eps, samples):", result_dbscan[2])
         print("Melhores Resultados DBScan (Silhouete, Davies_Bouldin, Calinski_Harabasz, n_clusters, n_outliers):", result_dbscan[0])                        
-        print("Melhores Resultados DBScan Normalizados (Silhouete, Davies_Bouldin, Calinski_Harabasz):", silhouette_norm_dbs, davies_norm_dbs)  
+        print("Melhores Resultados DBScan Normalizados (Silhouete, Davies_Bouldin, Calinski_Harabasz):", silhouette_norm_dbs)  
                 
         return (silhouette_norm_km, silhouette_norm_dbs)
                 
@@ -147,12 +152,18 @@ def group_dbscan(X_scaled):
     eps_values = np.linspace(0.5, 5, 10) 
     min_samples_values = range(3, 10)
     best_params = dbscan.find_best_params(X_scaled, eps_values, min_samples_values)
-
-    # Realizar o agrupamento
-    best_results, params = dbscan.run (X_scaled, best_params[0], best_params[1]) 
     
-    # best_results = dbscan.run (X_scaled, 0.5, 3) 
-    return (best_results, params, best_params)
+    # print ("Velho método: ", best_params)
+    
+    # min = dbscan.estimate_min_samples(X_scaled)
+    # eps = dbscan.find_optimal_epsilon(X_scaled, min)
+    # print ("Novo método: ", min, eps)
+    
+    
+    if best_params != None:	   
+        best_results, params = dbscan.run (X_scaled, best_params[0], best_params[1])
+        return (best_results, params, best_params)
+    return None
 
 # normalize to [0,1]            
 def normalizeSilhouette(value):             
@@ -212,7 +223,7 @@ if __name__ == "__main__":
     sensorType_env = ["AirThermometer", "HumiditySensor"]
    # sensorType_all = ["AirThermometer", "HumiditySensor","Glucometer", "HeartBeatSensor", "BloodPressureSensor", "BodyThermometer", "SkinConductanceSensor", "Accelerometer", "PulseOxymeter"]
     sensorType_all = ["AirThermometer", "HumiditySensor","Glucometer", "HeartBeatSensor", "SystolicBloodPressure", "DiastolicBloodPressure", "BodyThermometer", "SkinConductanceSensor", "Accelerometer", "PulseOxymeter"]
-    qtd = "7"
+    qtd = "90"
     
     # Criando a instância do FileManager
     file_manager = FileManager("results/statistic_results.json")
@@ -244,7 +255,6 @@ if __name__ == "__main__":
     results_kmeans = results_all[0]
     results_kmeans_metrics = results_kmeans ['resultado'][0]
     kmeans_labels = results_kmeans ['resultado'][3]
-    # params_kmeans = results_kmeans ['resultado'][2]
     algo_km.clusters = results_kmeans['resultado'][1]    
     algo_km.silhouette_score = results_kmeans_metrics[0]
     algo_km.davies_bouldin = results_kmeans_metrics[1]
@@ -253,33 +263,47 @@ if __name__ == "__main__":
     algo_km.memory_mb = results_kmeans['uso_memoria_MB']
     algo_km.cpu_perc = results_kmeans ['uso_cpu_percent']
     algo_km.clusters_count = results_kmeans['resultado'][2]
-    # algo_km.clusters_count = params_kmeans[2]
     
     health_stat.algorithms.append(algo_km)
                 
     algo_dbs = Algorithms(name="DBSCAN")
     results_dbscan = results_all[1]
-    results_dbscan_metrics = results_dbscan ['resultado'][0]
-    params_dbscan = results_dbscan ['resultado'][1]
-    best_params = results_dbscan ['resultado'][2]
-    algo_dbs.clusters = params_dbscan[0]
-    algo_dbs.silhouette_score = results_dbscan_metrics[0]
-    algo_dbs.davies_bouldin = results_dbscan_metrics[1]
-    algo_dbs.calisnky_harabasz = results_dbscan_metrics[2]
-    algo_dbs.time_s = results_dbscan ['tempo_execucao']
-    algo_dbs.memory_mb = results_dbscan['uso_memoria_MB']
-    algo_dbs.cpu_perc = results_dbscan ['uso_cpu_percent']
-    algo_dbs.outliers = params_dbscan[1]
-    algo_dbs.clusters_count = params_dbscan[2]
-    algo_dbs.eps = best_params[0]
-    algo_dbs.samples = best_params[1]
-
+    if results_all[1] != None:
+        results_dbscan_metrics = results_dbscan ['resultado'][0]
+        params_dbscan = results_dbscan ['resultado'][1]
+        best_params = results_dbscan ['resultado'][2]
+        algo_dbs.clusters = params_dbscan[0]
+        algo_dbs.silhouette_score = results_dbscan_metrics[0]
+        algo_dbs.davies_bouldin = results_dbscan_metrics[1]
+        algo_dbs.calisnky_harabasz = results_dbscan_metrics[2]
+        algo_dbs.time_s = results_dbscan ['tempo_execucao']
+        algo_dbs.memory_mb = results_dbscan['uso_memoria_MB']
+        algo_dbs.cpu_perc = results_dbscan ['uso_cpu_percent']
+        algo_dbs.outliers = params_dbscan[1]
+        algo_dbs.clusters_count = params_dbscan[2]
+        algo_dbs.eps = best_params[0]
+        algo_dbs.samples = best_params[1]
+        health_stat.run_time_s = algo_km.time_s + algo_dbs.time_s
+        health_stat.run_memo_mb = algo_km.memory_mb + algo_dbs.memory_mb
+        health_stat.run_cpu_perc = algo_km.cpu_perc + algo_dbs.cpu_perc
+    else:
+        algo_dbs.clusters = None
+        algo_dbs.silhouette_score = None
+        algo_dbs.davies_bouldin = None
+        algo_dbs.calisnky_harabasz = None
+        algo_dbs.time_s = None
+        algo_dbs.memory_mb = None
+        algo_dbs.cpu_perc = None
+        algo_dbs.outliers = None
+        algo_dbs.clusters_count = None
+        algo_dbs.eps = None
+        algo_dbs.samples = None
+        health_stat.run_time_s = 0
+        health_stat.run_memo_mb = 0
+        health_stat.run_cpu_perc = 0
         
     health_stat.algorithms.append(algo_dbs)
     
-    health_stat.run_time_s = algo_km.time_s + algo_dbs.time_s
-    health_stat.run_memo_mb = algo_km.memory_mb + algo_dbs.memory_mb
-    health_stat.run_cpu_perc = algo_km.cpu_perc + algo_dbs.cpu_perc
     
     # Usa os índices calculados anteriormente para gerar as métricas
     dados3 = medir_performance(calculate_metrics, results_kmeans ['resultado'], results_dbscan ['resultado'])
@@ -329,8 +353,9 @@ if __name__ == "__main__":
     
     title = "Health Domain with K-Means - "+qtd+" days"        
     shared.plot_pca(X_scaled=dados['resultado'], labels=kmeans_labels, file_name="results/"+qtd+"/"+qtd+"_km_pca_health.png", title=title)
-    title = "Health Domain with DBSCAN - "+qtd+" days"        
-    shared.plot_pca(X_scaled=dados['resultado'], labels=params_dbscan[3], file_name="results/"+qtd+"/"+qtd+"_dbscan_pca_health.png", title=title)
+    if results_all[1] != None:
+        title = "Health Domain with DBSCAN - "+qtd+" days"        
+        shared.plot_pca(X_scaled=dados['resultado'], labels=params_dbscan[3], file_name="results/"+qtd+"/"+qtd+"_dbscan_pca_health.png", title=title)
                
                
     print("=========== ENVIRONMENT DOMAIN ==========\n")
@@ -366,29 +391,46 @@ if __name__ == "__main__":
     algo_km.clusters_count = results_kmeans['resultado'][2]
     
     env_stat.algorithms.append(algo_km)
-                
-    algo_dbs = Algorithms(name="DBSCAN")
-    results_dbscan = results_all[1]
-    results_dbscan_metrics = results_dbscan ['resultado'][0]
-    params_dbscan = results_dbscan ['resultado'][1]
-    best_params = results_dbscan ['resultado'][2]
-    algo_dbs.clusters = params_dbscan[0]
-    algo_dbs.silhouette_score = results_dbscan_metrics[0]
-    algo_dbs.davies_bouldin = results_dbscan_metrics[1]
-    algo_dbs.calisnky_harabasz = results_dbscan_metrics[2]
-    algo_dbs.time_s = results_dbscan ['tempo_execucao']
-    algo_dbs.memory_mb = results_dbscan['uso_memoria_MB']
-    algo_dbs.cpu_perc = results_dbscan ['uso_cpu_percent']
-    algo_dbs.outliers = params_dbscan[1]
-    algo_dbs.clusters_count = params_dbscan[2]
-    algo_dbs.eps = best_params[0]
-    algo_dbs.samples = best_params[1]
+    
+    if results_all[1] != None:            
+        algo_dbs = Algorithms(name="DBSCAN")
+        results_dbscan = results_all[1]
+        results_dbscan_metrics = results_dbscan ['resultado'][0]
+        params_dbscan = results_dbscan ['resultado'][1]
+        best_params = results_dbscan ['resultado'][2]
+        algo_dbs.clusters = params_dbscan[0]
+        algo_dbs.silhouette_score = results_dbscan_metrics[0]
+        algo_dbs.davies_bouldin = results_dbscan_metrics[1]
+        algo_dbs.calisnky_harabasz = results_dbscan_metrics[2]
+        algo_dbs.time_s = results_dbscan ['tempo_execucao']
+        algo_dbs.memory_mb = results_dbscan['uso_memoria_MB']
+        algo_dbs.cpu_perc = results_dbscan ['uso_cpu_percent']
+        algo_dbs.outliers = params_dbscan[1]
+        algo_dbs.clusters_count = params_dbscan[2]
+        algo_dbs.eps = best_params[0]
+        algo_dbs.samples = best_params[1]    
+        env_stat.run_time_s = algo_km.time_s + algo_dbs.time_s
+        env_stat.run_memo_mb = algo_km.memory_mb + algo_dbs.memory_mb
+        env_stat.run_cpu_perc = algo_km.cpu_perc + algo_dbs.cpu_perc
+    else:
+        algo_dbs.clusters = None
+        algo_dbs.silhouette_score = None
+        algo_dbs.davies_bouldin = None
+        algo_dbs.calisnky_harabasz = None
+        algo_dbs.time_s = None
+        algo_dbs.memory_mb = None
+        algo_dbs.cpu_perc = None
+        algo_dbs.outliers = None
+        algo_dbs.clusters_count = None
+        algo_dbs.eps = None
+        algo_dbs.samples = None
+        env_stat.run_time_s = 0
+        env_stat.run_memo_mb = 0
+        env_stat.run_cpu_perc = 0
 
     env_stat.algorithms.append(algo_dbs)
     
-    env_stat.run_time_s = algo_km.time_s + algo_dbs.time_s
-    env_stat.run_memo_mb = algo_km.memory_mb + algo_dbs.memory_mb
-    env_stat.run_cpu_perc = algo_km.cpu_perc + algo_dbs.cpu_perc
+    
     
     # Usa os índices calculados anteriormente para gerar as métricas
     dados3 = medir_performance(calculate_metrics, results_kmeans ['resultado'], results_dbscan ['resultado'])
@@ -439,8 +481,9 @@ if __name__ == "__main__":
  
     title = "Environment Domain with K-Means - "+qtd+" days"        
     shared.plot_graph_kmeans(X=dados['resultado'], labels=kmeans_labels, centroids=kmeans_centroids, file_name="results/"+qtd+"/"+qtd+"_kmeans_graph_environment.png", title=title)
-    title = "Environment Domain with DBSCAN - "+qtd+" days"        
-    shared.plot_dbscan_clusters(X=dados['resultado'], labels=params_dbscan[3], file_name="results/"+qtd+"/"+qtd+"_dbscan_graph_environment.png", title=title)
+    if results_all[1] != None:  
+        title = "Environment Domain with DBSCAN - "+qtd+" days"        
+        shared.plot_dbscan_clusters(X=dados['resultado'], labels=params_dbscan[3], file_name="results/"+qtd+"/"+qtd+"_dbscan_graph_environment.png", title=title)
  
  
     print("=========== ENVIRONMENT_HEALTH DOMAIN ==========\n")   
@@ -475,30 +518,48 @@ if __name__ == "__main__":
     algo_km.clusters_count = results_kmeans['resultado'][2]
     
     env_health_stat.algorithms.append(algo_km)
-                
-    algo_dbs = Algorithms(name="DBSCAN")
-    results_dbscan = results_all[1]
-    results_dbscan_metrics = results_dbscan ['resultado'][0]
-    params_dbscan = results_dbscan ['resultado'][1]
-    best_params = results_dbscan ['resultado'][2]
-    algo_dbs.clusters = params_dbscan[0]
-    algo_dbs.silhouette_score = results_dbscan_metrics[0]
-    algo_dbs.davies_bouldin = results_dbscan_metrics[1]
-    algo_dbs.calisnky_harabasz = results_dbscan_metrics[2]
-    algo_dbs.time_s = results_dbscan ['tempo_execucao']
-    algo_dbs.memory_mb = results_dbscan['uso_memoria_MB']
-    algo_dbs.cpu_perc = results_dbscan ['uso_cpu_percent']
-    algo_dbs.outliers = params_dbscan[1]
-    algo_dbs.clusters_count = params_dbscan[2]
-    algo_dbs.eps = best_params[0]
-    algo_dbs.samples = best_params[1]
 
+    if results_all[1] != None:                  
+        algo_dbs = Algorithms(name="DBSCAN")
+        results_dbscan = results_all[1]
+        results_dbscan_metrics = results_dbscan ['resultado'][0]
+        params_dbscan = results_dbscan ['resultado'][1]
+        best_params = results_dbscan ['resultado'][2]
+        algo_dbs.clusters = params_dbscan[0]
+        algo_dbs.silhouette_score = results_dbscan_metrics[0]
+        algo_dbs.davies_bouldin = results_dbscan_metrics[1]
+        algo_dbs.calisnky_harabasz = results_dbscan_metrics[2]
+        algo_dbs.time_s = results_dbscan ['tempo_execucao']
+        algo_dbs.memory_mb = results_dbscan['uso_memoria_MB']
+        algo_dbs.cpu_perc = results_dbscan ['uso_cpu_percent']
+        algo_dbs.outliers = params_dbscan[1]
+        algo_dbs.clusters_count = params_dbscan[2]
+        algo_dbs.eps = best_params[0]
+        algo_dbs.samples = best_params[1]
+        
+        env_health_stat.run_time_s = algo_km.time_s + algo_dbs.time_s
+        env_health_stat.run_memo_mb = algo_km.memory_mb + algo_dbs.memory_mb
+        env_health_stat.run_cpu_perc = algo_km.cpu_perc + algo_dbs.cpu_perc
+    else:
+        algo_dbs.clusters = None
+        algo_dbs.silhouette_score = None
+        algo_dbs.davies_bouldin = None
+        algo_dbs.calisnky_harabasz = None
+        algo_dbs.time_s = None
+        algo_dbs.memory_mb = None
+        algo_dbs.cpu_perc = None
+        algo_dbs.outliers = None
+        algo_dbs.clusters_count = None
+        algo_dbs.eps = None
+        algo_dbs.samples = None
+        
+        env_health_stat.run_time_s = 0
+        env_health_stat.run_memo_mb = 0
+        env_health_stat.run_cpu_perc = 0
         
     env_health_stat.algorithms.append(algo_dbs)
     
-    env_health_stat.run_time_s = algo_km.time_s + algo_dbs.time_s
-    env_health_stat.run_memo_mb = algo_km.memory_mb + algo_dbs.memory_mb
-    env_health_stat.run_cpu_perc = algo_km.cpu_perc + algo_dbs.cpu_perc
+    
     
     # Usa os índices calculados anteriormente para gerar as métricas
     dados3 = medir_performance(calculate_metrics, results_kmeans ['resultado'], results_dbscan ['resultado'])
@@ -549,8 +610,9 @@ if __name__ == "__main__":
     
     title = "Environment and Health Domains with K-Means - "+qtd+" days"        
     shared.plot_pca(X_scaled=dados['resultado'], labels=kmeans_labels, file_name="results/"+qtd+"/"+qtd+"_km_pca_environment_health.png", title=title)
-    title = "Environment and Health Domains with DBSCAN - "+qtd+" days"        
-    shared.plot_pca(X_scaled=dados['resultado'], labels=params_dbscan[3], file_name="results/"+qtd+"/"+qtd+"_dbscan_pca_environment_health.png", title=title)
+    if results_all[1] != None: 
+        title = "Environment and Health Domains with DBSCAN - "+qtd+" days"        
+        shared.plot_pca(X_scaled=dados['resultado'], labels=params_dbscan[3], file_name="results/"+qtd+"/"+qtd+"_dbscan_pca_environment_health.png", title=title)
     
     print("\nSalvando em JSON.")
     print ("========================================\n")
