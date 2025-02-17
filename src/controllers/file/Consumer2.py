@@ -72,8 +72,8 @@ def calculate_metrics(result_kmeans, result_dbscan):
         
         silhouette_norm_km = normalizeSilhouette(result_kmeans[0][0])
         
-        # if result_dbscan[0][0] != None:
-        silhouette_norm_dbs = normalizeSilhouette(result_dbscan[0][0])
+        if result_dbscan[0][0] != None:
+            silhouette_norm_dbs = normalizeSilhouette(result_dbscan[0][0])
         
         
         # davies_norm = normalizeDavies(result_kmeans[0][1], result_dbscan[0][1])
@@ -133,8 +133,8 @@ def group_kmeans(X_scaled):
 def group_dbscan(X_scaled):
      
     # Definir melhores parametros
-    eps_values = np.linspace(0.5, 5, 10) 
-    min_samples_values = range(3, 10)
+    # eps_values = np.linspace(0.5, 5, 10) 
+    # min_samples_values = range(3, 10)
     #best_params = dbscan.find_best_params(X_scaled, eps_values, min_samples_values)
     #print ("Best Params Velho - Group DBSCAN (eps, min): ", best_params)
     # print ("Velho método: ", best_params)

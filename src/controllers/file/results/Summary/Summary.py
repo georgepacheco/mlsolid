@@ -18,12 +18,16 @@ def time_memory_graph (data):
             records.append({
                 "Domain": domain_name,
                 "qtd_data": int(stat["qtd_data"]),
-                "total_time": round(float(stat["total_time_s"]),5),
-                "total_memo": round(float(stat["total_memo_mb"]),5)
+                "total_time": round(float(stat["total_time_s"]),2),
+                "total_memo": round(float(stat["total_memo_mb"]),2)
             })
     
     # Criar DataFrame
     df = pd.DataFrame(records)
+    
+    df["Domain"] = pd.Categorical(df["Domain"], categories=[d["name"] for d in data["domains"]], ordered=True)
+    df = df.sort_values(by=["Domain", "qtd_data"])
+    
     df.to_excel("spreadsheets/total_memo_times.xlsx", index=False)
     # Criar gráfico
     plt.figure(figsize=(10, 6))
@@ -75,12 +79,16 @@ def algo_time_memory_graph(data):
                     "Domain": domain_name,
                     "qtd_data": int(stat["qtd_data"]),
                     "Algorithm": algo["name"],
-                    "time_s": round(float(algo["time_s"] if algo["time_s"] is not None else 0),5),
-                    "memory_mb": round(float(algo["memory_mb"] if algo["memory_mb"] is not None else 0),5)
+                    "time_s": round(float(algo["time_s"] if algo["time_s"] is not None else 0),2),
+                    "memory_mb": round(float(algo["memory_mb"] if algo["memory_mb"] is not None else 0),2)
                 })
 
     # Criar DataFrame
-    df = pd.DataFrame(records)    
+    df = pd.DataFrame(records)   
+    
+    df["Domain"] = pd.Categorical(df["Domain"], categories=[d["name"] for d in data["domains"]], ordered=True)
+    df = df.sort_values(by=["Domain", "Algorithm", "qtd_data"])
+     
     df.to_excel("spreadsheets/algo_memo_times.xlsx", index=False)
     
         
@@ -231,13 +239,17 @@ def metrics_domain_table (data):
                     "Domain": domain_name,
                     "qtd_data": int(stat["qtd_data"]),
                     "Algorithm": algo["name"],                    
-                    "Silhouette": algo["silhouette_score"] if algo["silhouette_score"] is not None else 0,
-                    "Davies-Bouldin": algo["davies_bouldin"] if algo["davies_bouldin"] is not None else 0,
-                    "Calinski-Harabasz": algo["calisnky_harabasz"] if algo["calisnky_harabasz"] is not None else 0
+                    "Silhouette": round(float(algo["silhouette_score"] if algo["silhouette_score"] is not None else 0),2),
+                    "Davies-Bouldin": round(float(algo["davies_bouldin"] if algo["davies_bouldin"] is not None else 0),2),
+                    "Calinski-Harabasz": round(float(algo["calisnky_harabasz"] if algo["calisnky_harabasz"] is not None else 0),2)
                 })
                 
     # Criar DataFrame
-    df = pd.DataFrame(records)        
+    df = pd.DataFrame(records)   
+    
+    df["Domain"] = pd.Categorical(df["Domain"], categories=[d["name"] for d in data["domains"]], ordered=True)
+    df = df.sort_values(by=["Domain", "qtd_data"])
+         
     df.to_excel("spreadsheets/metrics_domain.xlsx", index=False)      
     
          

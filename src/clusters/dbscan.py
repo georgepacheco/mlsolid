@@ -41,45 +41,49 @@ def find_best_params(X, eps_values, min_samples_values):
                     best_params = (eps, min_samples)                                        
     return (best_params)     
     
-# def estimate_min_samples(X):
-#     neighbors = NearestNeighbors(n_neighbors=5).fit(X)
-#     distances, _ = neighbors.kneighbors(X)
-    
-#     avg_density = np.mean(distances[:, -1])  # Média da distância ao 5º vizinho
-#     estimated_min_samples = int(np.clip(avg_density * X.shape[1], 2, 20))  # Limita entre 2 e 20
-#     return estimated_min_samples
 
 def estimate_min_samples(X, neighbors_range=[4, 5, 10, 16, 20]):
     best_min_samples = None
     best_variability = float('inf')  # Inicializa com um valor alto
 
+    # Define the range of neighbors
+    neighbors_range = range (4, 21)
+    
     for n_neighbors in neighbors_range:
+        
+        # Computing nearest neighbors
         neighbors = NearestNeighbors(n_neighbors=n_neighbors).fit(X)
         distances, _ = neighbors.kneighbors(X)
 
+        # Computing the average density and estimate the min_samples
         avg_density = np.mean(distances[:, -1])  # Média da distância ao k-ésimo vizinho
         estimated_min_samples = int(np.clip(avg_density * X.shape[1], 2, 20))  # Limita entre 2 e 20
         
-        # Avalia a variabilidade das distâncias (quanto mais estável, melhor)
+        # Compute the variability by standard deviation 
         variability = np.std(distances[:, -1])  # Desvio padrão das distâncias
         
-        # Seleciona o min_samples que tem menor variabilidade
+        # Choosing the best min_samples
         if variability < best_variability:
             best_variability = variability
             best_min_samples = estimated_min_samples
 
     return best_min_samples
 
+
 def find_optimal_epsilon(X, min_samples):
+    
+    # Compute nearest neighbors
     neighbors = NearestNeighbors(n_neighbors=min_samples)
     neighbors.fit(X)
     
+    # Compute the distances to the k-ésimo nearest neighbors
     distances, _ = neighbors.kneighbors(X)
     distances = np.sort(distances[:, -1])  # Ordenar as distâncias do k-vizinho
     
+    # Find the knee point
     knee = KneeLocator(range(len(distances)), distances, curve="convex", direction="increasing")
+    
     return distances[knee.knee]  # Retorna o melhor epsilon estimado
-
 
 
 def run (X, eps, min_samples):

@@ -149,15 +149,16 @@ def group_kmeans(X_scaled):
 def group_dbscan(X_scaled):
      
     # Definir melhores parametros
-    eps_values = np.linspace(0.5, 5, 10) 
-    min_samples_values = range(3, 10)
-    best_params = dbscan.find_best_params(X_scaled, eps_values, min_samples_values)
-    
+    # eps_values = np.linspace(0.5, 5, 10) 
+    # min_samples_values = range(3, 10)
+    #best_params = dbscan.find_best_params(X_scaled, eps_values, min_samples_values)
+    #print ("Best Params Velho - Group DBSCAN (eps, min): ", best_params)
     # print ("Velho método: ", best_params)
     
-    # min = dbscan.estimate_min_samples(X_scaled)
-    # eps = dbscan.find_optimal_epsilon(X_scaled, min)
-    # print ("Novo método: ", min, eps)
+    min = dbscan.estimate_min_samples(X_scaled)
+    eps = dbscan.find_optimal_epsilon(X_scaled, min)
+    best_params = (eps, min)
+    print ("Best Params Novo - Group DBSCAN (eps, min): ", eps, min)
     
     
     if best_params != None:	   
@@ -223,7 +224,7 @@ if __name__ == "__main__":
     sensorType_env = ["AirThermometer", "HumiditySensor"]
    # sensorType_all = ["AirThermometer", "HumiditySensor","Glucometer", "HeartBeatSensor", "BloodPressureSensor", "BodyThermometer", "SkinConductanceSensor", "Accelerometer", "PulseOxymeter"]
     sensorType_all = ["AirThermometer", "HumiditySensor","Glucometer", "HeartBeatSensor", "SystolicBloodPressure", "DiastolicBloodPressure", "BodyThermometer", "SkinConductanceSensor", "Accelerometer", "PulseOxymeter"]
-    qtd = "90"
+    qtd = "7"
     
     # Criando a instância do FileManager
     file_manager = FileManager("results/statistic_results.json")
