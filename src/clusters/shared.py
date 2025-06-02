@@ -49,8 +49,8 @@ def plot_pca(X_scaled, labels, file_name, title):
         plt.scatter(reduced_data[mask, 0], reduced_data[mask, 1], 
                     color=color, label=label_name, alpha=0.7)
         
-    plt.title(title)
-    plt.legend()
+    # plt.title(title)
+    # plt.legend()
     plt.savefig(file_name)
     plt.close()
     
@@ -62,13 +62,13 @@ def plot_graph_kmeans (X, labels, centroids, file_name, title):
 
     # Criar scatter plot dos clusters
     plt.figure(figsize=(8, 6))
-    sns.scatterplot(x=X[:, 0], y=X[:, 1], hue=labels, palette="viridis", legend="full")
+    sns.scatterplot(x=X[:, 0], y=X[:, 1], hue=labels, palette="viridis", legend=False)
 
     # # Plotar os centróides
     # plt.scatter(centroids[:, 0], centroids[:, 1], c='red', marker='X', s=200, label="Centroids")
 
-    plt.title(title)
-    plt.legend()
+    # plt.title(title)
+
     plt.savefig(file_name)
     plt.close()
 
@@ -95,6 +95,6 @@ def plot_dbscan_clusters(X, labels, file_name, title):
         plt.scatter(X[labels == label, 0], X[labels == label, 1], 
                     c=[color], label=label_name, alpha=0.6, edgecolors="k")
 
-    plt.title(title)    
-    plt.legend()
+    #plt.title(title)    
+    #plt.legend()
     plt.savefig(file_name)
