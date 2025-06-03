@@ -10,6 +10,8 @@ from Performance import medir_performance
 from dataclasses import asdict
 from Model import FileManager, Results, Domain, Statistics, Algorithms
 from datetime import datetime
+from pathlib import Path
+
 
 # Adiciona o diretório raiz do projeto ao sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
@@ -120,17 +122,18 @@ def calculate_metrics(result_kmeans, result_dbscan):
         return (silhouette_norm_km, silhouette_norm_dbs)
                 
 
-def save_metrics(kmeans_metric, dbscan_metric, domain):
+def save_metrics(metric, domain):
     # ====================== SAVE RESULTS INTO SOLID ======================================        
-        # enviar o melhor valor para o solid
-        if (kmeans_metric > dbscan_metric):
-            # Executa o script Node.js para gerar os dados
-            # print ('Enviando ... ', str(result_kmeans))
-            subprocess.run(["node", "../../../dist/controllers/file/SaveMetrics.js", webid, str(kmeans_metric), domain], check=True)
-        else:
-            # Executa o script Node.js para gerar os dados
-            # print ('Enviando ... ', str(result_dbscan[0]))
-            subprocess.run(["node", "../../../dist/controllers/file/SaveMetrics.js", webid, str(dbscan_metric), domain], check=True)
+    subprocess.run(["node", "../../../dist/controllers/file/SaveMetrics.js", webid, str(metric), domain], check=True)
+        # # enviar o melhor valor para o solid
+        # if (kmeans_metric > dbscan_metric):
+        #     # Executa o script Node.js para gerar os dados
+        #     # print ('Enviando ... ', str(result_kmeans))
+        #     subprocess.run(["node", "../../../dist/controllers/file/SaveMetrics.js", webid, str(kmeans_metric), domain], check=True)
+        # else:
+        #     # Executa o script Node.js para gerar os dados
+        #     # print ('Enviando ... ', str(result_dbscan[0]))
+        #     subprocess.run(["node", "../../../dist/controllers/file/SaveMetrics.js", webid, str(dbscan_metric), domain], check=True)
     
        
 def group_kmeans(X_scaled):
@@ -172,25 +175,60 @@ def normalizeSilhouette(value):
     return (value + 1) / 2;
 
 # normalize to [0,1]                
-def normalizeDavies (km_value, dbs_value):
-    # Valores fictícios de Davies-Bouldin
-    db_values = [km_value, dbs_value]  
+def normalize_dbi(value):
+    """Inverte e normaliza Davies-Bouldin Index (menor é melhor)."""
+    return 1 / (1 + value)  
 
-    # Passo 1: Inverter os valores
-    db_inverted = [1/x for x in db_values]
+def normalize_chi(value, max_chi):
+    """Aplica normalização logarítmica para Calinski-Harabasz Index."""    
+    return np.log1p(value) / np.log1p(max_chi)
 
-    # Passo 2: Criar o scaler
-    scaler = MinMaxScaler()
+def choose_best_algorithm(silhouette_kmeans, silhouette_dbscan, dbi_kmeans, dbi_dbscan, chi_kmeans, chi_dbscan):
+    """
+    Calcula o melhor algoritmo baseado nas métricas normalizadas.
+    """
+    # Normalizando as métricas
+    sil_kmeans_norm = normalizeSilhouette(silhouette_kmeans)
+    sil_dbscan_norm = normalizeSilhouette(silhouette_dbscan)
+    print ("Silhouette: ", sil_kmeans_norm, sil_dbscan_norm)
 
-    # Passo 3: Normalizar os valores
-    db_normalized = scaler.fit_transform(np.array(db_inverted).reshape(-1, 1)).flatten()
+    dbi_kmeans_norm = normalize_dbi(dbi_kmeans)
+    dbi_dbscan_norm = normalize_dbi(dbi_dbscan)
+    print("DBI: ",dbi_kmeans_norm, dbi_dbscan_norm)
 
-    return db_normalized
+    max_chi = max(chi_kmeans, chi_dbscan)
+    chi_kmeans_norm = normalize_chi(chi_kmeans, max_chi)
+    chi_dbscan_norm = normalize_chi(chi_dbscan, max_chi)
+    print ("Chi: ", chi_kmeans_norm, chi_dbscan_norm)
+    
+    # Pesos das métricas (ajustáveis)
+    # w1, w2, w3 = 1/3, 1/3, 1/3  
 
-# normalize to [0,1]            
-def normalize_calinski(km_value, dbs_value):
-    print ("normalize calinski")
+    # # Calculando os scores
+    # score_kmeans = w1 * sil_kmeans_norm + w2 * dbi_kmeans_norm + w3 * chi_kmeans_norm
+    # score_dbscan = w1 * sil_dbscan_norm + w2 * dbi_dbscan_norm + w3 * chi_dbscan_norm
+    
+    score_kmeans = (sil_kmeans_norm + dbi_kmeans_norm + chi_kmeans_norm)/3
+    score_dbscan = (sil_dbscan_norm + dbi_dbscan_norm + chi_dbscan_norm)/3
+    
+    
+    # # Calculando os scores
+    # score_kmeans = w1 * sil_kmeans_norm + w2 * dbi_kmeans_norm 
+    # score_dbscan = w1 * sil_dbscan_norm + w2 * dbi_dbscan_norm 
 
+    # Escolhendo o melhor algoritmo
+    # best_algorithm = "K-Means" if score_kmeans > score_dbscan else "DBSCAN"
+    if (score_kmeans > score_dbscan):
+        best_algorithm = "K-Means"
+        best_metric = sil_kmeans_norm
+    else:
+        best_algorithm = "DBSCAN"
+        best_metric = sil_dbscan_norm
+    
+    best_scores = (score_kmeans, score_dbscan)  # Agora garantidamente entre 0 e 1
+    metrics = (sil_kmeans_norm, sil_dbscan_norm)
+
+    return best_algorithm, best_scores, metrics, best_metric
 
 def process_data (webid, sensorType, limit): 
     # Arquivo temporário para comunicação
@@ -228,7 +266,21 @@ if __name__ == "__main__":
     # Pega a data atual para usar como qtd
     data_atual = datetime.now()
     # Converte para o formato YYYYMMDD e transforma em inteiro
-    qtd = int(data_atual.strftime("%Y%m%d"))
+    qtd = data_atual.strftime("%Y%m%d")
+
+
+
+	# Caminho base: diretório onde está o script
+    base_path = Path(__file__).parent
+
+	# Caminho da pasta "results"
+    results_path = base_path / "results"
+
+	# Nome do novo subdiretório
+    novo_diretorio = results_path / qtd
+
+	# Criação do diretório (e da pasta results se ainda não existir)
+    novo_diretorio.mkdir(parents=True, exist_ok=True)
     
             
     # Criando a instância do FileManager
@@ -270,10 +322,10 @@ if __name__ == "__main__":
     algo_km.cpu_perc = results_kmeans ['uso_cpu_percent']
     algo_km.clusters_count = results_kmeans['resultado'][2]
     
-    env_stat.algorithms.append(algo_km)
+    # env_stat.algorithms.append(algo_km)
     
-    if results_all[1] != None:            
-        algo_dbs = Algorithms(name="DBSCAN")
+    algo_dbs = Algorithms(name="DBSCAN")
+    if results_all[1] != None:                    
         results_dbscan = results_all[1]
         results_dbscan_metrics = results_dbscan ['resultado'][0]
         params_dbscan = results_dbscan ['resultado'][1]
@@ -308,29 +360,44 @@ if __name__ == "__main__":
         env_stat.run_memo_mb = 0
         env_stat.run_cpu_perc = 0
 
-    env_stat.algorithms.append(algo_dbs)
+    # env_stat.algorithms.append(algo_dbs)
     
-           
+    km = results_kmeans['resultado']      
+    dbs = results_dbscan['resultado']     
     # Usa os índices calculados anteriormente para gerar as métricas
-    dados3 = medir_performance(calculate_metrics, results_kmeans ['resultado'], results_dbscan ['resultado'])
+    # dados3 = medir_performance(calculate_metrics, results_kmeans ['resultado'], results_dbscan ['resultado'])
+    dados3 = medir_performance(choose_best_algorithm, km[0][0], dbs[0][0], km[0][1], dbs[0][1], km[0][2], dbs[0][2])
     print("\n")
     print("**** CALCULATE METRICS TIME ****")
     print(f"Tempo de execução: {dados3['tempo_execucao']:.8f} segundos")
     print(f"Uso de memória: {dados3['uso_memoria_MB']:.8f} MB")
     print(f"Uso médio de CPU: {dados3['uso_cpu_percent']:.8f}%") 
+    # best_algorithm, best_scores, metrics, best_metric
     metrics = dados3['resultado']
+    print ("Metricas Calculadas: ", metrics)
     
     env_stat.metrics_time_s = dados3['tempo_execucao']
     env_stat.metrics_memo_mb = dados3['uso_memoria_MB']
     env_stat.metrics_cpu_perc = dados3['uso_cpu_percent']
     
-    dados4 = medir_performance(save_metrics, metrics[0], metrics[1], "Environment")
+    env_stat.best_algorithm = metrics[0]
+    
+    algo_km.score = metrics[1][0]
+    algo_km.metric_value = metrics[2][0]
+    
+    algo_dbs.score = metrics[1][1]
+    algo_dbs.metric_value = metrics[2][1]
+          
+    env_stat.algorithms.append(algo_km)
+    env_stat.algorithms.append(algo_dbs)
+    
+    dados4 = medir_performance(save_metrics, metrics[3], "Environment")
     print("\n")
     print("**** SAVE TIME ****")
     print(f"Tempo de execução: {dados4['tempo_execucao']:.8f} segundos")
     print(f"Uso de memória: {dados4['uso_memoria_MB']:.8f} MB")
     print(f"Uso médio de CPU: {dados4['uso_cpu_percent']:.8f}%")
-    
+        
     env_stat.save_time_s = dados4['tempo_execucao']
     env_stat.save_memo_mb = dados4['uso_memoria_MB']
     env_stat.save_cpu_perc = dados4['uso_cpu_percent']

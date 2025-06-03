@@ -11,6 +11,8 @@ class Algorithms:
     silhouette_score: Optional[float] = None
     davies_bouldin: Optional[float] = None
     calisnky_harabasz: Optional[float] = None
+    score: Optional[float] = None
+    metric_value: Optional[float] = None
     time_s: Optional[float] = None
     memory_mb: Optional[float] = None
     cpu_perc: Optional[float] = None
@@ -18,6 +20,7 @@ class Algorithms:
     eps: Optional[float] = None
     samples: Optional[int] = None
     outliers: Optional[int] = None
+    
 
 @dataclass
 class Statistics:
@@ -38,6 +41,8 @@ class Statistics:
     total_memo_mb: Optional[float] = None
     total_cpu_perc: Optional[float] = None
     algorithms: List[Algorithms] = field(default_factory=list)
+    best_algorithm: Optional[str] = None
+    
 
 @dataclass
 class Domain:
