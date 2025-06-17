@@ -5,12 +5,16 @@ import pandas as pd
 import numpy as np
 import sys
 import os
+import matplotlib.pyplot as plt
+import seaborn as sns
 from sklearn.preprocessing import MinMaxScaler
 from Performance import medir_performance
-from dataclasses import asdict
+from dataclasses import asdict, dataclass, field
+from typing import List, Optional
 from Model import FileManager, Results, Domain, Statistics, Algorithms
 from datetime import datetime
 from pathlib import Path
+from sklearn.decomposition import PCA
 
 
 # Adiciona o diretório raiz do projeto ao sys.path
@@ -20,7 +24,49 @@ from clusters import kmeans
 from clusters import shared
 from clusters import dbscan
 
-def prepare_data(file_path):
+@dataclass
+class Algo:
+    name: Optional[str] = None
+    clusters: Optional[int] = None
+    silhouette_score: Optional[float] = None
+    davies_bouldin: Optional[float] = None
+    calisnky_harabasz: Optional[float] = None
+    score: Optional[float] = None
+    metric_value: Optional[float] = None
+    time_s: Optional[float] = None
+    memory_mb: Optional[float] = None
+    cpu_perc: Optional[float] = None
+    clusters_count: Optional[int] = None
+    eps: Optional[float] = None
+    samples: Optional[int] = None
+    outliers: Optional[int] = None
+    
+
+@dataclass
+class Stat:
+    qtd_data: Optional[int] = None
+    index: Optional[int] = None
+    norm_data: Optional[str] = None
+    norm2_metric: Optional[str] = None
+    best_algorithm: Optional[str] = None
+    preprocess_time_s: Optional[float] = None
+    preprocess_memo_mb: Optional[float] = None
+    preprocess_cpu_perc: Optional[float] = None
+    run_time_s: Optional[float] = None
+    run_memo_mb: Optional[float] = None
+    run_cpu_perc: Optional[float] = None
+    metrics_time_s: Optional[float] = None
+    metrics_memo_mb: Optional[float] = None
+    metrics_cpu_perc: Optional[float] = None
+    save_time_s: Optional[float] = None
+    save_memo_mb: Optional[float] = None
+    save_cpu_perc: Optional[float] = None
+    total_time_s: Optional[float] = None
+    total_memo_mb: Optional[float] = None
+    total_cpu_perc: Optional[float] = None
+    algorithms: List[Algorithms] = field(default_factory=list)
+
+def prepare_data(file_path, norm):
     # Lê os dados do arquivo
     with open(file_path, 'r') as file:
         data = json.load(file)        
@@ -54,7 +100,7 @@ def prepare_data(file_path):
         # df.to_csv("meu_dataset.csv", ",", index=False)                
         
         # Preprocess
-        X_scaled = shared.preprocess(df)
+        X_scaled = shared.preprocess(df, norm)
         
         return X_scaled
 
@@ -92,16 +138,7 @@ def calculate_metrics(result_kmeans, result_dbscan):
         silhouette_norm_km = normalizeSilhouette(result_kmeans[0][0])
         
         if result_dbscan[0][0] != None:
-            silhouette_norm_dbs = normalizeSilhouette(result_dbscan[0][0])
-        
-        
-        # davies_norm = normalizeDavies(result_kmeans[0][1], result_dbscan[0][1])
-        # calinski_norm
-        
-        # davies_norm_km = davies_norm[0]
-        # davies_norm_dbs = davies_norm[1]
-        # calinski_norm_km = normalize_calinski(result_kmeans[0][2])        
-        # calinski_norm_dbs = normalize_calinski(result_dbscan[0][2])
+            silhouette_norm_dbs = normalizeSilhouette(result_dbscan[0][0])        
         
         print("\n")
         print("***** Results Kmeans *****")
@@ -124,16 +161,7 @@ def calculate_metrics(result_kmeans, result_dbscan):
 
 def save_metrics(metric, domain):
     # ====================== SAVE RESULTS INTO SOLID ======================================        
-    subprocess.run(["node", "../../../dist/controllers/file/SaveMetrics.js", webid, str(metric), domain], check=True)
-        # # enviar o melhor valor para o solid
-        # if (kmeans_metric > dbscan_metric):
-        #     # Executa o script Node.js para gerar os dados
-        #     # print ('Enviando ... ', str(result_kmeans))
-        #     subprocess.run(["node", "../../../dist/controllers/file/SaveMetrics.js", webid, str(kmeans_metric), domain], check=True)
-        # else:
-        #     # Executa o script Node.js para gerar os dados
-        #     # print ('Enviando ... ', str(result_dbscan[0]))
-        #     subprocess.run(["node", "../../../dist/controllers/file/SaveMetrics.js", webid, str(dbscan_metric), domain], check=True)
+    subprocess.run(["node", "../../../dist/controllers/file/SaveMetrics.js", webid, str(metric), domain], check=True)       
     
        
 def group_kmeans(X_scaled):
@@ -151,14 +179,7 @@ def group_kmeans(X_scaled):
     # return (results, optimal_k, params[2])
     
 def group_dbscan(X_scaled):
-     
-    # Definir melhores parametros
-    # eps_values = np.linspace(0.5, 5, 10) 
-    # min_samples_values = range(3, 10)
-    #best_params = dbscan.find_best_params(X_scaled, eps_values, min_samples_values)
-    #print ("Best Params Velho - Group DBSCAN (eps, min): ", best_params)
-    # print ("Velho método: ", best_params)
-    
+       
     min = dbscan.estimate_min_samples(X_scaled)
     eps = dbscan.find_optimal_epsilon(X_scaled, min)
     best_params = (eps, min)
@@ -183,10 +204,7 @@ def normalize_chi(value, max_chi):
     """Aplica normalização logarítmica para Calinski-Harabasz Index."""    
     return np.log1p(value) / np.log1p(max_chi)
 
-def choose_best_algorithm(silhouette_kmeans, silhouette_dbscan, dbi_kmeans, dbi_dbscan, chi_kmeans, chi_dbscan):
-    """
-    Calcula o melhor algoritmo baseado nas métricas normalizadas.
-    """
+def custom_norm (silhouette_kmeans, silhouette_dbscan, dbi_kmeans, dbi_dbscan, chi_kmeans, chi_dbscan):
     # Normalizando as métricas
     sil_kmeans_norm = normalizeSilhouette(silhouette_kmeans)
     sil_dbscan_norm = normalizeSilhouette(silhouette_dbscan)
@@ -201,32 +219,60 @@ def choose_best_algorithm(silhouette_kmeans, silhouette_dbscan, dbi_kmeans, dbi_
     chi_dbscan_norm = normalize_chi(chi_dbscan, max_chi)
     print ("Chi: ", chi_kmeans_norm, chi_dbscan_norm)
     
-    # Pesos das métricas (ajustáveis)
-    # w1, w2, w3 = 1/3, 1/3, 1/3  
+    return (sil_kmeans_norm, dbi_kmeans_norm, chi_kmeans_norm, sil_dbscan_norm, dbi_dbscan_norm, chi_dbscan_norm)
 
-    # # Calculando os scores
-    # score_kmeans = w1 * sil_kmeans_norm + w2 * dbi_kmeans_norm + w3 * chi_kmeans_norm
-    # score_dbscan = w1 * sil_dbscan_norm + w2 * dbi_dbscan_norm + w3 * chi_dbscan_norm
-    
-    score_kmeans = (sil_kmeans_norm + dbi_kmeans_norm + chi_kmeans_norm)/3
-    score_dbscan = (sil_dbscan_norm + dbi_dbscan_norm + chi_dbscan_norm)/3
-    
-    
-    # # Calculando os scores
-    # score_kmeans = w1 * sil_kmeans_norm + w2 * dbi_kmeans_norm 
-    # score_dbscan = w1 * sil_dbscan_norm + w2 * dbi_dbscan_norm 
+def min_max_norm (silhouette_kmeans, silhouette_dbscan, dbi_kmeans, dbi_dbscan, chi_kmeans, chi_dbscan):
+    # Silhouette
+    sil_min = min(silhouette_kmeans, silhouette_dbscan)
+    sil_max = max(silhouette_kmeans, silhouette_dbscan)
+    sil_kmeans_norm = (silhouette_kmeans - sil_min) / (sil_max - sil_min) if sil_max != sil_min else 0.5
+    sil_dbscan_norm = (silhouette_dbscan - sil_min) / (sil_max - sil_min) if sil_max != sil_min else 0.5
 
+    # DBI (quanto menor, melhor) – inverte o valor antes da normalização
+    dbi_kmeans_inv = -dbi_kmeans
+    dbi_dbscan_inv = -dbi_dbscan
+    dbi_min = min(dbi_kmeans_inv, dbi_dbscan_inv)
+    dbi_max = max(dbi_kmeans_inv, dbi_dbscan_inv)
+    dbi_kmeans_norm = (dbi_kmeans_inv - dbi_min) / (dbi_max - dbi_min) if dbi_max != dbi_min else 0.5
+    dbi_dbscan_norm = (dbi_dbscan_inv - dbi_min) / (dbi_max - dbi_min) if dbi_max != dbi_min else 0.5
+
+    # CHI (quanto maior, melhor)
+    chi_min = min(chi_kmeans, chi_dbscan)
+    chi_max = max(chi_kmeans, chi_dbscan)
+    chi_kmeans_norm = (chi_kmeans - chi_min) / (chi_max - chi_min) if chi_max != chi_min else 0.5
+    chi_dbscan_norm = (chi_dbscan - chi_min) / (chi_max - chi_min) if chi_max != chi_min else 0.5
+
+    # Logs de debug (opcional)
+    print("Silhouette:", sil_kmeans_norm, sil_dbscan_norm)
+    print("DBI:", dbi_kmeans_norm, dbi_dbscan_norm)
+    print("CHI:", chi_kmeans_norm, chi_dbscan_norm)
+
+    return (sil_kmeans_norm, dbi_kmeans_norm, chi_kmeans_norm, sil_dbscan_norm, dbi_dbscan_norm, chi_dbscan_norm)
+
+def choose_best_algorithm(silhouette_kmeans, silhouette_dbscan, dbi_kmeans, dbi_dbscan, chi_kmeans, chi_dbscan, norm='custom'):
+    """
+    Calcula o melhor algoritmo baseado nas métricas normalizadas.
+    """
+    
+    if (norm == 'custom' ):          
+        indices_norm = custom_norm (silhouette_kmeans, silhouette_dbscan, dbi_kmeans, dbi_dbscan, chi_kmeans, chi_dbscan)
+    elif (norm == 'minmax'):
+        indices_norm = min_max_norm (silhouette_kmeans, silhouette_dbscan, dbi_kmeans, dbi_dbscan, chi_kmeans, chi_dbscan)
+ 
+    score_kmeans = (indices_norm[0] + indices_norm[1] + indices_norm[2])/3
+    score_dbscan = (indices_norm[3] + indices_norm[4] + indices_norm[5])/3 	       
+    
     # Escolhendo o melhor algoritmo
     # best_algorithm = "K-Means" if score_kmeans > score_dbscan else "DBSCAN"
     if (score_kmeans > score_dbscan):
         best_algorithm = "K-Means"
-        best_metric = sil_kmeans_norm
+        best_metric = indices_norm[0]
     else:
         best_algorithm = "DBSCAN"
-        best_metric = sil_dbscan_norm
+        best_metric = indices_norm[3]
     
     best_scores = (score_kmeans, score_dbscan)  # Agora garantidamente entre 0 e 1
-    metrics = (sil_kmeans_norm, sil_dbscan_norm)
+    metrics = (indices_norm[0], indices_norm[3])
 
     return best_algorithm, best_scores, metrics, best_metric
 
@@ -254,42 +300,8 @@ def process_data (webid, sensorType, limit):
             os.remove(temp_file_path)
             print("Arquivo temporário removido.")
         return X_scaled
-
-if __name__ == "__main__":
-    
-    print("Iniciando execução do Consumer...")
-    webid = "https://192.168.0.111:3000/Joao/profile/card#me"
-    
-    sensorType_env = ["HumiditySensor", "AirThermometer", "OccupancyDetector", "CO_Sensor", "LightSensor"]
-
-    
-    # Pega a data atual para usar como qtd
-    data_atual = datetime.now()
-    # Converte para o formato YYYYMMDD e transforma em inteiro
-    qtd = data_atual.strftime("%Y%m%d")
-
-
-
-	# Caminho base: diretório onde está o script
-    base_path = Path(__file__).parent
-
-	# Caminho da pasta "results"
-    results_path = base_path / "results"
-
-	# Nome do novo subdiretório
-    novo_diretorio = results_path / qtd
-
-	# Criação do diretório (e da pasta results se ainda não existir)
-    novo_diretorio.mkdir(parents=True, exist_ok=True)
-    
-            
-    # Criando a instância do FileManager
-    file_manager = FileManager("results/statistic_real.json")
-
-    # Carregando os dados existentes do arquivo JSON
-    results = file_manager.load_results()
-
-                   
+  
+def run_experiment (norm_data, data_qtd, norm_metric, replica):                 
     print("=========== ENVIRONMENT DOMAIN ==========\n")
     env_domain = Domain(name="Environment")
     env_stat = Statistics(qtd_data=qtd)
@@ -312,6 +324,15 @@ if __name__ == "__main__":
     results_kmeans = results_all[0]
     results_kmeans_metrics = results_kmeans ['resultado'][0]
     kmeans_labels = results_kmeans ['resultado'][3]
+    
+    # Salvar rótulos automáticos em CSV para comparação com benchmark
+    # df_kmeans_auto = pd.DataFrame({"Cluster": kmeans_labels})
+    df_kmeans_auto = pd.DataFrame(dados['resultado'])
+    df_kmeans_auto["KMeans_Cluster"] = kmeans_labels
+    output_kmeans_path = f"results/{qtd}/kmeans_result_auto.csv"
+    df_kmeans_auto.to_csv(output_kmeans_path, index=False)
+    print(len(df_kmeans_auto))
+    
     kmeans_centroids = results_kmeans ['resultado'][4]
     algo_km.clusters = results_kmeans['resultado'][1]    
     algo_km.silhouette_score = results_kmeans_metrics[0]
@@ -328,7 +349,16 @@ if __name__ == "__main__":
     if results_all[1] != None:                    
         results_dbscan = results_all[1]
         results_dbscan_metrics = results_dbscan ['resultado'][0]
-        params_dbscan = results_dbscan ['resultado'][1]
+        params_dbscan = results_dbscan ['resultado'][1]        
+        dbscan_labels = params_dbscan[3]  # Certifique-se que está correto
+        
+        
+        df_dbscan_auto = pd.DataFrame(dados['resultado'])
+        df_dbscan_auto["DBSCAN_Cluster"] = dbscan_labels        
+        output_dbscan_path = f"results/{qtd}/dbscan_result_auto.csv"
+        df_dbscan_auto.to_csv(output_dbscan_path, index=False)
+        print(f"Resultado do DBSCAN salvo para comparação: {output_dbscan_path}")
+        
         best_params = results_dbscan ['resultado'][2]
         algo_dbs.clusters = params_dbscan[0]
         algo_dbs.silhouette_score = results_dbscan_metrics[0]
@@ -424,14 +454,40 @@ if __name__ == "__main__":
         else:
             # Adicionar nova estatística
             domain.statistics.append(env_stat)
- 
-    title = "Environment Domain with K-Means - "+qtd+" days"        
-    shared.plot_graph_kmeans(X=dados['resultado'], labels=kmeans_labels, centroids=kmeans_centroids, file_name="results/"+qtd+"/"+qtd+"_kmeans_graph_environment.png", title=title)
-    if results_all[1] != None:  
-        title = "Environment Domain with DBSCAN - "+qtd+" days"        
-        shared.plot_dbscan_clusters(X=dados['resultado'], labels=params_dbscan[3], file_name="results/"+qtd+"/"+qtd+"_dbscan_graph_environment.png", title=title)
- 
-         
+
+    
+    # --------------------------
+    # ETAPA 2 - Visualização
+    # --------------------------
+    pca = PCA(n_components=2)
+    pca_result = pca.fit_transform(dados['resultado'])
+    pca_df = pd.DataFrame(pca_result, columns=["PCA1", "PCA2"])
+    
+    # Adiciona os rótulos
+    pca_df["KMeans"] = kmeans_labels
+    pca_df["DBSCAN"] = dbscan_labels
+    
+    
+    output_dir = os.path.join("results", data_atual)
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # K-Means
+    plt.figure(figsize=(8, 6))
+    sns.scatterplot(data=pca_df, x="PCA1", y="PCA2", hue="KMeans", palette="viridis")
+    #plt.title(f"K-Means Clustering (k=3) - Silhouette Score: {kmeans_score:.2f}")
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_dir, f"auto_pca_kmeans_{data_atual}.png"))
+    plt.close()
+
+    # DBSCAN
+    plt.figure(figsize=(8, 6))
+    sns.scatterplot(data=pca_df, x="PCA1", y="PCA2", hue="DBSCAN", palette="tab10")
+    #plt.title(f"DBSCAN Clustering (eps=0.8) - Silhouette Score: {dbscan_score:.2f}" if dbscan_score else "DBSCAN Clustering (eps=0.8)")
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_dir, f"auto_pca_dbscan_{data_atual}.png"))
+    plt.close()    
+
+             
     print("\nSalvando em JSON.")
     print ("========================================\n")
     
@@ -440,3 +496,54 @@ if __name__ == "__main__":
     print("\nExecução concluída.")
     print ("========================================\n")
     
+if __name__ == "__main__":
+    
+    print("Iniciando execução do Consumer...")
+    webid = "https://192.168.0.111:3000/Joao/profile/card#me"
+    
+    sensorType_env = ["HumiditySensor", "AirThermometer", "CO_Sensor", "LightSensor"]
+
+    
+    # Pega a data atual para usar como qtd
+    data_atual = datetime.now().strftime("%Y%m%d")
+    # Converte para o formato YYYYMMDD e transforma em inteiro
+    qtd = data_atual
+
+    # Caminho base: diretório onde está o script
+    base_path = Path(__file__).parent
+
+    # Caminho da pasta "results"
+    results_path = base_path / "experiment3"
+
+    # Nome do novo subdiretório
+    novo_diretorio = results_path / qtd
+
+    # Criação do diretório (e da pasta results se ainda não existir)
+    novo_diretorio.mkdir(parents=True, exist_ok=True)
+    
+            
+    # Criando a instância do FileManager
+    file_manager = FileManager("experiment3/experiment_results.json")
+
+    # Carregando os dados existentes do arquivo JSON
+    results = file_manager.load_results()
+
+    # Caminho para o CSV de planejamento
+    PLAN_CSV_PATH = "design_fatorial.csv"
+    
+    # Carrega o planejamento experimental
+    plan_df = pd.read_csv(PLAN_CSV_PATH)
+    
+    # Loop pelos experimentos
+    for i, row in plan_df.iterrows():
+        print(f"\n==== Executando experimento {i+1}/{len(plan_df)} - Ordem {row['run_order']} ====")
+        try:
+            run_experiment(
+            norm_data=row['norm_data'],
+            data_qtd=int(row['data']),
+            norm_metric=row['norm_metric'],
+            replica=int(row['replica']),
+            run_order=int(row['run_order'])
+        )
+        except Exception as e:
+            print(f"Erro ao executar a execução {i+1}: {e}")

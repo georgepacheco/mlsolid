@@ -1,0 +1,25 @@
+[
+    {
+        "date": 20250606,
+        "algorithms": [
+            {
+                "name": "KMeans",
+                "clusters": 3,
+                "silhouette_score": 0.3503,
+                "davies_bouldin": 1.1533,
+                "calisnky_harabasz": 761.09,
+                "clusters_count": 3
+            },
+            {
+                "name": "DBSCAN",
+                "eps": 0.8,
+                "samples": 5,
+                "silhouette_score": 0.0934,
+                "davies_bouldin": 0.6409,
+                "calisnky_harabasz": 29.66,
+                "clusters_count": 7,
+                "outliers": 45
+            }
+        ]
+    }
+]

@@ -1,11 +1,11 @@
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 import pandas as pd
 import numpy as np
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-def preprocess(df):
+def preprocess(df, norm='zscore'):
     
     df = df.apply(pd.to_numeric, errors='coerce')
     
@@ -21,7 +21,14 @@ def preprocess(df):
         X = X.dropna()
 
     # Normalizar os dados
-    scaler = StandardScaler()
+#    scaler = StandardScaler()
+    if norm == 'zscore':
+        scaler = StandardScaler()
+    elif norm == 'minmax':
+        scaler = MinMaxScaler()
+    else:
+        raise ValueError("Parâmetro 'norm' deve ser 'zscore' ou 'minmax'")
+        
     X_scaled = scaler.fit_transform(X) 
     
     return X_scaled

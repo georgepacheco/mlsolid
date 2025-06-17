@@ -1,0 +1,19 @@
+[
+    {
+        "date": 20250606,
+        "comparisons": [
+            {
+                "algorithm": "KMeans",
+                "ARI": 0.6052,
+                "NMI": 0.6559,
+                "FMI": 0.7781
+            },
+            {
+                "algorithm": "DBSCAN",
+                "ARI": 0.515,
+                "NMI": 0.5185,
+                "FMI": 0.9884
+            }
+        ]
+    }
+]
